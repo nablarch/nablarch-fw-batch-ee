@@ -1,0 +1,132 @@
+group = 'com.nablarch.framework'
+version = '1.0.1'
+description = 'jBatch(JSR352)に準拠したバッチ処理方式を実現する'
+
+buildscript {
+  repositories {
+    mavenLocal()
+    maven { url "${developLibUrl}" }
+    jcenter()
+  }
+  dependencies {
+    classpath "com.nablarch.dev:nablarch-gradle-plugin:${nablarchGradlePluginVersion}"
+    classpath "net.saliman:gradle-cobertura-plugin:${coberturaPluginVersion}"
+  }
+}
+apply plugin: 'com.nablarch.dev.nablarch-build'
+apply plugin: 'com.nablarch.dev.nablarch-maven-deploy'
+apply plugin: 'com.nablarch.dev.nablarch-sonarqube'
+apply plugin: 'com.nablarch.dev.nablarch-version'
+apply plugin: 'cobertura'
+apply plugin: 'idea'
+apply plugin: 'eclipse'
+
+// ビルド時のJavaバージョンを指定する
+sourceCompatibility=JavaVersion.VERSION_1_7
+targetCompatibility=JavaVersion.VERSION_1_7
+
+configurations {
+  slf
+}
+
+dependencies {
+  // jBatch api
+  provided 'javax.batch:javax.batch-api:1.0'
+  provided 'javax.inject:javax.inject:1'
+  provided 'javax.enterprise:cdi-api:1.1'
+
+  // nablarch
+  compile "com.nablarch.framework:nablarch-core-repository:${nablarchCoreRepositoryVersion}"
+  compile "com.nablarch.framework:nablarch-core-applog:${nablarchCoreApplogVersion}"
+  compile "com.nablarch.framework:nablarch-core-transaction:${nablarchCoreTransactionVersion}"
+  compile "com.nablarch.framework:nablarch-common-dao:${nablarchCommonDaoVersion}"
+  compile "com.nablarch.framework:nablarch-fw-batch:${nablarchFwBatchVersion}"
+
+  // jdbc
+  compile "com.nablarch.framework:nablarch-common-jdbc:${nablarchCommonJdbcVersion}"
+
+  // test api
+  testCompile 'org.jmockit:jmockit:1.13'
+  testCompile 'junit:junit:4.10'
+  testCompile 'com.nablarch.dev:nablarch-test-support:0.0.5'
+
+  testCompile 'com.h2database:h2:1.4.187'
+
+  testCompile 'org.glassfish.main.extras:glassfish-embedded-all:4.1'
+  testCompile 'org.jboss.arquillian.junit:arquillian-junit-container:1.0.0.Final'
+  testCompile 'org.jboss.arquillian.container:arquillian-glassfish-embedded-3.1:1.0.0.CR4'
+  testCompile 'org.slf4j:slf4j-log4j12:1.7.12'
+
+  cobertura("net.sourceforge.cobertura:cobertura:2.1.1") {
+    exclude module: 'slf4j-api'
+  }
+
+  slf 'org.slf4j:slf4j-api:1.7.5'
+
+}
+
+test {
+
+  jvmArgs (
+          '-XX:MaxPermSize=256m',
+          '-Xmx512m',
+          '-Dfile.encoding=UTF-8',
+          '-XX:-UseSplitVerifier'
+  )
+
+  ignoreFailures = true
+
+
+  doFirst {
+    def logDir = new File('log')
+    if (!logDir.exists()) {
+      assert logDir.mkdirs()
+    }
+  }
+
+  cobertura {
+    coverageSourceDirs = ["${projectDir}/src/main/java/"]
+    coverageIgnoreTrivial = true
+    coverageFormats = ['xml']
+    coverageDirs = [project.sourceSets.main.output.classesDir]
+    coverageExcludes = [
+            '.*Abstract.+Listener.*',
+    ]
+  }
+}
+
+task coverage(dependsOn: ['clean', 'generateCoberturaReportByAnt'])
+
+def coberturaReportDir = new File(project.buildDir, "cobertura-report")
+
+task generateCoberturaReportByAnt(dependsOn: 'cobertura') {
+  def dataFile = "${project.buildDir}/cobertura/cobertura.ser"
+
+  inputs.file file(dataFile)
+  outputs.dir coberturaReportDir
+
+  doLast {
+    ant {
+      taskdef(resource: 'tasks.properties',
+              classpath: configurations.cobertura.asPath + ':' + configurations.slf.asPath)
+
+      'cobertura-report'(
+              destdir: coberturaReportDir,
+              datafile: dataFile,
+              srcdir: "${projectDir}/src/main/java/",
+              format: 'xml'
+      )
+    }
+  }
+}
+
+sonarRunner {
+  sonarProperties {
+    property "sonar.java.coveragePlugin", "cobertura"
+    property "sonar.cobertura.reportPath", "${coberturaReportDir}/coverage.xml"
+  }
+}
+
+tasks.sonarRunner {
+  dependsOn = ['coverage']
+}

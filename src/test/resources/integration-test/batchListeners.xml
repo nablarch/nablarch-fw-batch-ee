@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component-configuration
+    xmlns="http://tis.co.jp/nablarch/component-configuration"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://tis.co.jp/nablarch/component-configuration http://tis.co.jp/nablarch/component-configuration">
+
+  <component name="duplicateProcessChecker" class="nablarch.fw.handler.BasicDuplicateProcessChecker">
+    <property name="dbTransactionManager" ref="tran" />
+    <property name="tableName" value="batch_status" />
+    <property name="processIdentifierColumnName" value="job_name" />
+    <property name="processActiveFlgColumnName" value="active" />
+  </component>
+
+  <!-- JobListener -->
+  <list name="jobListeners">
+    <component class="nablarch.fw.batch.ee.listener.job.JobProgressLogListener" />
+    <component class="nablarch.fw.batch.ee.listener.job.DuplicateJobRunningCheckListener">
+      <property name="duplicateProcessChecker" ref="duplicateProcessChecker" />
+    </component>
+  </list>
+
+  <!-- StepListener-->
+  <list name="stepListeners">
+    <component class="nablarch.fw.batch.ee.listener.step.StepProgressLogListener" />
+    <component class="nablarch.fw.batch.ee.listener.step.DbConnectionManagementListener">
+      <property name="dbConnectionManagementHandler">
+        <component class="nablarch.common.handler.DbConnectionManagementHandler" />
+      </property>
+    </component>
+    <component class="nablarch.fw.batch.ee.listener.step.StepTransactionManagementListener" />
+  </list>
+
+  <!-- ItemWriteListener -->
+  <list name="itemWriteListeners">
+    <component class="nablarch.fw.batch.ee.listener.chunk.ChunkProgressLogListener" />
+    <component class="nablarch.fw.batch.ee.listener.chunk.ItemWriteTransactionManagementListener" />
+  </list>
+
+  <!-- 重複起動チェックのリスナーを外したJobListenerリスト -->
+  <list name="skip-chunk-integration-test.jobListeners" />
+  <list name="error-batchlet-integration-test.jobListeners" />
+  <list name="multi-step-integration-test.jobListeners" />
+  <list name="chunk-listener-error-integration-test.jobListeners" />
+  <list name="item-write-listener-error-on-before-write-test.jobListeners" />
+  <list name="item-write-listener-error-on-after-write-test.jobListeners" />
+  <list name="step-listener-error-on-before-step-test.jobListeners" />
+  <list name="step-listener-error-on-after-step-test.jobListeners" />
+
+  <list name="multi-step-integration-with-job-listener-test.jobListeners">
+    <component class="nablarch.fw.batch.ee.listener.job.JobProgressLogListener" />
+  </list>
+
+  <list name="step-listener-error-on-before-step-test.stepListeners">
+    <component class="nablarch.fw.batch.ee.listener.step.DbConnectionManagementListener">
+      <property name="dbConnectionManagementHandler">
+        <component class="nablarch.common.handler.DbConnectionManagementHandler" />
+      </property>
+    </component>
+    <component class="nablarch.fw.batch.ee.listener.step.StepTransactionManagementListener" />
+    <component class="nablarch.fw.batch.ee.integration.app.ThrowErrorBeforeStepListener" />
+  </list>
+
+  <list name="step-listener-error-on-after-step-test.stepListeners">
+    <component class="nablarch.fw.batch.ee.listener.step.DbConnectionManagementListener">
+      <property name="dbConnectionManagementHandler">
+        <component class="nablarch.common.handler.DbConnectionManagementHandler" />
+      </property>
+    </component>
+    <component class="nablarch.fw.batch.ee.listener.step.StepTransactionManagementListener" />
+    <component class="nablarch.fw.batch.ee.integration.app.ThrowErrorAfterStepListener" />
+  </list>
+
+  <list name="item-write-listener-error-on-before-write-test.itemWriteListeners">
+    <component class="nablarch.fw.batch.ee.listener.chunk.ItemWriteTransactionManagementListener" />
+    <component class="nablarch.fw.batch.ee.integration.app.ThrowErrorBeforeWriteListener" />
+  </list>
+
+  <list name="item-write-listener-error-on-after-write-test.itemWriteListeners">
+    <component class="nablarch.fw.batch.ee.listener.chunk.ItemWriteTransactionManagementListener" />
+    <component class="nablarch.fw.batch.ee.integration.app.ThrowErrorAfterWriteListener" />
+  </list>
+
+</component-configuration>

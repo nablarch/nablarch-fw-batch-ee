@@ -1,0 +1,34 @@
+<job id="skip-chunk-integration-test" xmlns="http://xmlns.jcp.org/xml/ns/javaee" version="1.0">
+  <listeners>
+    <listener ref="nablarchJobListenerExecutor">
+      <properties>
+        <property name="diConfigFilePath" value="integration-test/jbatch.xml" />
+      </properties>
+    </listener>
+  </listeners>
+
+  <step id="myStep">
+    <listeners>
+      <listener ref="nablarchStepListenerExecutor" />
+      <listener ref="nablarchItemWriteListenerExecutor" />
+    </listeners>
+
+    <chunk item-count="10" skip-limit="2" retry-limit="1">
+      <reader ref="stringReader">
+        <properties>
+          <property name="max" value="49" />
+        </properties>
+      </reader>
+      <processor ref="createEntityProcessor" />
+      <writer ref="throwErrorWriter" />
+
+      <skippable-exception-classes>
+        <include class="nablarch.fw.batch.ee.integration.app.SkipException" />
+      </skippable-exception-classes>
+
+      <retryable-exception-classes>
+        <include class="java.lang.NullPointerException" />
+      </retryable-exception-classes>
+    </chunk>
+  </step>
+</job>

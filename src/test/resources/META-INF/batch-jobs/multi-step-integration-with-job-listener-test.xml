@@ -1,0 +1,29 @@
+<job id="multi-step-integration-with-job-listener-test" xmlns="http://xmlns.jcp.org/xml/ns/javaee" version="1.0">
+  <listeners>
+    <listener ref="nablarchJobListenerExecutor">
+      <properties>
+        <property name="diConfigFilePath" value="integration-test/jbatch.xml" />
+      </properties>
+    </listener>
+  </listeners>
+
+
+  <step id="batchlet" next="chunk">
+    <listeners>
+      <listener ref="nablarchStepListenerExecutor" />
+    </listeners>
+    <batchlet ref="registerBatchOutputTable" />
+  </step>
+
+  <step id="chunk">
+    <listeners>
+      <listener ref="nablarchStepListenerExecutor" />
+      <listener ref="nablarchItemWriteListenerExecutor" />
+    </listeners>
+
+    <chunk>
+      <reader ref="batchOutputReader" />
+      <writer ref="fileWriter" />
+    </chunk>
+  </step>
+</job>
