@@ -58,7 +58,7 @@ dependencies {
   testCompile 'org.slf4j:slf4j-log4j12:1.7.12'
 
   cobertura("net.sourceforge.cobertura:cobertura:2.1.1") {
-    exclude module: 'slf4j-api'
+    exclude group:'*', module: 'slf4j-api'
   }
 
   slf 'org.slf4j:slf4j-api:1.7.5'
