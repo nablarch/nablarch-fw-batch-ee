@@ -1,5 +1,5 @@
 group = 'com.nablarch.framework'
-version = '1.0.1'
+version = '1.0.2'
 description = 'jBatch(JSR352)に準拠したバッチ処理方式を実現する'
 
 buildscript {
@@ -22,8 +22,8 @@ apply plugin: 'idea'
 apply plugin: 'eclipse'
 
 // ビルド時のJavaバージョンを指定する
-sourceCompatibility=JavaVersion.VERSION_1_7
-targetCompatibility=JavaVersion.VERSION_1_7
+sourceCompatibility=JavaVersion.VERSION_1_6
+targetCompatibility=JavaVersion.VERSION_1_6
 
 configurations {
   slf
