@@ -1,0 +1,30 @@
+<configuration>
+  <appender name="ALL" class="nablarch.fw.batch.ee.integration.InMemoryAppender">
+    <encoder>
+      <pattern>%level %logger{10} %msg%n</pattern>
+    </encoder>
+  </appender>
+  <appender name="OPERATION" class="nablarch.fw.batch.ee.integration.InMemoryAppender">
+    <encoder>
+      <pattern>%level %logger{10} %msg%n%nopex</pattern>
+    </encoder>
+  </appender>
+
+  <appender name="PROGRESS" class="nablarch.fw.batch.ee.integration.InMemoryAppender">
+    <encoder>
+      <pattern>%level %logger{10} %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <logger name="OPERATOR" level="ERROR">
+    <appender-ref ref="OPERATION" />
+  </logger>
+
+  <logger name="PROGRESS" additivity="false">
+    <appender-ref ref="PROGRESS" />
+  </logger>
+
+  <root level="INFO">
+    <appender-ref ref="ALL" />
+  </root>
+</configuration>

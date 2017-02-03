@@ -1,14 +1,19 @@
 package nablarch.fw.batch.ee.listener.job;
 
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.startsWith;
+import static org.junit.Assert.assertThat;
+
 import javax.batch.runtime.BatchStatus;
 import javax.batch.runtime.context.JobContext;
 
 import mockit.Expectations;
 import mockit.Mocked;
 import nablarch.fw.batch.ee.initializer.LogInitializer;
+import nablarch.fw.batch.ee.integration.InMemoryAppender;
 import nablarch.fw.batch.ee.listener.NablarchListenerContext;
-import nablarch.test.support.log.app.OnMemoryLogWriter;
 
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -23,8 +28,13 @@ public class JobProgressLogListenerTest {
     @Mocked
     JobContext mockJobContext;
 
+    @Before
+    public void setUp() throws Exception {
+        InMemoryAppender.clear();
+    }
+
     @BeforeClass
-    public static void setUp() throws Exception {
+    public static void setUpClass() throws Exception {
         LogInitializer.initialize();
     }
 
@@ -42,7 +52,7 @@ public class JobProgressLogListenerTest {
 
         sut.beforeJob(new NablarchListenerContext(mockJobContext, null));
 
-        OnMemoryLogWriter.assertLogContains("writer.appLog", "INFO PROGRESS start job. job name=[jobName]");
+        assertThat(InMemoryAppender.getLogMessages("PROGRESS"), contains(startsWith("INFO PROGRESS start job. job name=[jobName]")));
 
     }
 
@@ -63,7 +73,6 @@ public class JobProgressLogListenerTest {
 
         sut.afterJob(new NablarchListenerContext(mockJobContext, null));
 
-        OnMemoryLogWriter
-                .assertLogContains("writer.appLog", "INFO PROGRESS finish job. job name=[jobName], batch status=[COMPLETED]");
+        assertThat(InMemoryAppender.getLogMessages("PROGRESS"), contains(startsWith("INFO PROGRESS finish job. job name=[jobName], batch status=[COMPLETED]")));
     }
 }

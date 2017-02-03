@@ -5,8 +5,8 @@ import mockit.Mocked;
 import mockit.NonStrictExpectations;
 import nablarch.core.repository.ObjectLoader;
 import nablarch.core.repository.SystemRepository;
+import nablarch.fw.batch.ee.integration.InMemoryAppender;
 import nablarch.fw.batch.ee.listener.NablarchListenerExecutor.Runner;
-import nablarch.test.support.log.app.OnMemoryLogWriter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -16,9 +16,10 @@ import javax.batch.runtime.context.StepContext;
 import java.util.*;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
-import static org.junit.matchers.JUnitMatchers.containsString;
 
 /**
  * {@link NablarchListenerExecutor}のテストクラス。
@@ -48,7 +49,7 @@ public class NablarchListenerExecutorTest {
         sut = new NablarchListenerExecutor<String>("testListeners", jobContext);
         listenerList.clear();
         SystemRepository.clear();
-        OnMemoryLogWriter.clear();
+        InMemoryAppender.clear();
     }
 
     @After
@@ -333,8 +334,8 @@ public class NablarchListenerExecutorTest {
         assertThat(listenerList.get(2), is("after:testListener1"));
 
         // ログの確認
-        List<String> msgs = OnMemoryLogWriter.getMessages("writer.appLog");
-        assertThat(msgs.get(0), containsString("failed to execute listener. job=[testJob]"));
+        assertThat(InMemoryAppender.getLogMessages("ALL"), contains(
+                containsString("failed to execute listener. job=[testJob]")));
     }
 
     /**
@@ -371,8 +372,8 @@ public class NablarchListenerExecutorTest {
         assertThat(listenerList.get(2), is("after:testListener1"));
 
         // 発生した例外のログが出力されること
-        List<String> msgs = OnMemoryLogWriter.getMessages("writer.appLog");
-        assertThat(msgs.get(0), containsString("failed to execute listener. job=[testJob]"));
+        assertThat(InMemoryAppender.getLogMessages("ALL"), contains(
+                containsString("failed to execute listener. job=[testJob]")));
     }
 
     /**
@@ -415,9 +416,9 @@ public class NablarchListenerExecutorTest {
         assertThat(listenerList.get(4), is("after:testListener1"));
 
         // 発生した全ての例外のログが出力されること
-        List<String> msgs = OnMemoryLogWriter.getMessages("writer.appLog");
-        assertThat(msgs.get(0), containsString("failed to execute listener. job=[testJob]"));
-        assertThat(msgs.get(1), containsString("failed to execute listener. job=[testJob]"));
+        assertThat(InMemoryAppender.getLogMessages("ALL"), contains(
+                containsString("failed to execute listener. job=[testJob]"),
+                containsString("failed to execute listener. job=[testJob]")));
     }
 
     /**
@@ -456,8 +457,8 @@ public class NablarchListenerExecutorTest {
         assertThat(listenerList.get(2), is("after:testListener1"));
 
         // 出力されるログにステップ名が表示されていること
-        List<String> msgs = OnMemoryLogWriter.getMessages("writer.appLog");
-        assertThat(msgs.get(0), containsString("failed to execute listener. job=[testJob], step=[testStep]"));
+        assertThat(InMemoryAppender.getLogMessages("ALL"), contains(
+                containsString("failed to execute listener. job=[testJob], step=[testStep]")));
     }
 
     /**
@@ -545,8 +546,8 @@ public class NablarchListenerExecutorTest {
         assertThat(listenerList.get(2), is("onError:testListener1:testException"));
 
         // 発生した例外のログが出力されること
-        List<String> msgs = OnMemoryLogWriter.getMessages("writer.appLog");
-        assertThat(msgs.get(0), containsString("failed to execute listener. job=[testJob], step=[testStep]"));
+        assertThat(InMemoryAppender.getLogMessages("ALL"), contains(
+                containsString("failed to execute listener. job=[testJob], step=[testStep]")));
     }
 
     /**
@@ -586,8 +587,8 @@ public class NablarchListenerExecutorTest {
         assertThat(listenerList.get(2), is("onError:testListener1:testException"));
 
         // 発生した例外のログが出力されること
-        List<String> msgs = OnMemoryLogWriter.getMessages("writer.appLog");
-        assertThat(msgs.get(0), containsString("failed to execute listener. job=[testJob], step=[testStep]"));
+        assertThat(InMemoryAppender.getLogMessages("ALL"), contains(
+                containsString("failed to execute listener. job=[testJob], step=[testStep]")));
     }
 
     /**
@@ -633,8 +634,8 @@ public class NablarchListenerExecutorTest {
         assertThat(listenerList.get(4), is("onError:testListener1:testException"));
 
         // 発生した例外のログが全て出力されること
-        List<String> msgs = OnMemoryLogWriter.getMessages("writer.appLog");
-        assertThat(msgs.get(0), containsString("failed to execute listener. job=[testJob], step=[testStep]"));
-        assertThat(msgs.get(1), containsString("failed to execute listener. job=[testJob], step=[testStep]"));
+        assertThat(InMemoryAppender.getLogMessages("ALL"), contains(
+                containsString("failed to execute listener. job=[testJob], step=[testStep]"),
+                containsString("failed to execute listener. job=[testJob], step=[testStep]")));
     }
 }
