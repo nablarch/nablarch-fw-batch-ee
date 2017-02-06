@@ -2,6 +2,8 @@ package nablarch.fw.batch.ee.integration;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.CoreMatchers.startsWith;
+import static org.hamcrest.Matchers.contains;
 import static org.junit.Assert.assertThat;
 
 import java.io.BufferedReader;
@@ -10,29 +12,31 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.LogManager;
-
 import javax.batch.runtime.BatchStatus;
 import javax.batch.runtime.JobExecution;
 
+import mockit.Deencapsulation;
+import nablarch.core.db.statement.SqlResultSet;
+import nablarch.core.db.statement.SqlRow;
 import nablarch.core.repository.ObjectLoader;
 import nablarch.core.repository.SystemRepository;
+import nablarch.fw.batch.ee.initializer.RepositoryInitializer;
+import nablarch.fw.batch.ee.integration.app.FileWriter;
+import nablarch.fw.batch.ee.integration.app.RegisterBatchOutputTable;
+import nablarch.fw.batch.ee.integration.app.ThrowErrorWriter;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ArchivePath;
 import org.jboss.shrinkwrap.api.Filter;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-
-import nablarch.core.db.statement.SqlResultSet;
-import nablarch.core.db.statement.SqlRow;
-import nablarch.fw.batch.ee.initializer.RepositoryInitializer;
-import nablarch.fw.batch.ee.integration.app.FileWriter;
-import nablarch.fw.batch.ee.integration.app.RegisterBatchOutputTable;
-import nablarch.fw.batch.ee.integration.app.ThrowErrorWriter;
-import nablarch.test.support.log.app.OnMemoryLogWriter;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -40,8 +44,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
-
-import mockit.Deencapsulation;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 /**
  * Java Batchの結合テスト。
@@ -69,15 +72,19 @@ public class BatchIntegrationTest {
 
     @BeforeClass
     public static void setUpClass() throws Exception {
+        SLF4JBridgeHandler.removeHandlersForRootLogger();
+        SLF4JBridgeHandler.install();
+
         // jBatch実装側のログをより詳細まで出るように変更。
         // デフォルトレベルだと、情報少なくてよくわからないので。
         LogManager.getLogManager()
                 .readConfiguration(new ByteArrayInputStream(
-                        ("handlers=java.util.logging.ConsoleHandler\n"
-                                 + ".level=INFO\n"
-                                 + "com.ibm.level=FINE\n"
-                                 + "java.util.logging.ConsoleHandler.level=FINEST\n"
-                                 + "java.util.logging.ConsoleHandler.formatter=java.util.logging.SimpleFormatter\n").getBytes()));
+                        ("handlers=org.slf4j.bridge.SLF4JBridgeHandler\n"
+                                + ".level=INFO\n"
+                                + "com.ibm.level=FINE\n"
+                                + "org.slf4j.bridge.SLF4JBridgeHandler.level=FINEST\n"
+                                + "org.slf4j.bridge.SLF4JBridgeHandler.formatter=java.util.logging.SimpleFormatter\n").getBytes()));
+
     }
 
     @Before
@@ -87,7 +94,7 @@ public class BatchIntegrationTest {
         ThrowErrorWriter.skipIds = new int[0];
         ThrowErrorWriter.errorId = -1;
         ThrowErrorWriter.retryError = Collections.emptySet();
-        OnMemoryLogWriter.clear();
+        InMemoryAppender.clear();
     }
 
     @After
@@ -698,11 +705,11 @@ public class BatchIntegrationTest {
         resource.startJob("batchlet-integration-test");
 
         // -------------------------------------------------- assert log
-        String[] expected = { "INFO PROGRESS start job. job name=[batchlet-integration-test]",
-            "INFO PROGRESS start step. step name=[step1]",
-            "INFO PROGRESS finish step. step name=[step1], step status=[SUCCEEDED]",
-            "INFO PROGRESS finish job. job name=[batchlet-integration-test], batch status=[COMPLETED]" };
-        OnMemoryLogWriter.assertLogContains("writer.appLog", expected);
+        assertThat(InMemoryAppender.getLogMessages("PROGRESS"), contains(
+                startsWith("INFO PROGRESS start job. job name=[batchlet-integration-test]"),
+                startsWith("INFO PROGRESS start step. step name=[step1]"),
+                startsWith("INFO PROGRESS finish step. step name=[step1], step status=[SUCCEEDED]"),
+                startsWith("INFO PROGRESS finish job. job name=[batchlet-integration-test], batch status=[COMPLETED]")));
     }
 
     /**
@@ -721,11 +728,11 @@ public class BatchIntegrationTest {
         resource.startJob("batchlet-integration-test");
 
         // -------------------------------------------------- assert log
-        String[] expected = { "INFO PROGRESS start job. job name=[batchlet-integration-test]",
-            "INFO PROGRESS start step. step name=[step1]",
-            "INFO PROGRESS finish step. step name=[step1], step status=[FAILED]",
-            "INFO PROGRESS finish job. job name=[batchlet-integration-test], batch status=[FAILED]" };
-        OnMemoryLogWriter.assertLogContains("writer.appLog", expected);
+        assertThat(InMemoryAppender.getLogMessages("PROGRESS"), contains(
+                startsWith("INFO PROGRESS start job. job name=[batchlet-integration-test]"),
+                startsWith("INFO PROGRESS start step. step name=[step1]"),
+                startsWith("INFO PROGRESS finish step. step name=[step1], step status=[FAILED]"),
+                startsWith("INFO PROGRESS finish job. job name=[batchlet-integration-test], batch status=[FAILED]")));
     }
 
     /**
@@ -743,13 +750,14 @@ public class BatchIntegrationTest {
         resource.startJob("multi-step-integration-with-job-listener-test");
 
         // -------------------------------------------------- assert log
-        String[] expected = { "INFO PROGRESS start job. job name=[multi-step-integration-with-job-listener-test]",
-            "INFO PROGRESS start step. step name=[batchlet]",
-            "INFO PROGRESS finish step. step name=[batchlet], step status=[SUCCEEDED]",
-            "INFO PROGRESS start step. step name=[chunk]",
-            "INFO PROGRESS finish step. step name=[chunk], step status=[SUCCEEDED]",
-            "INFO PROGRESS finish job. job name=[multi-step-integration-with-job-listener-test], batch status=[COMPLETED]" };
-        OnMemoryLogWriter.assertLogContains("writer.appLog", expected);
+        assertThat(InMemoryAppender.getLogMessages("PROGRESS"), contains(
+                startsWith("INFO PROGRESS start job. job name=[multi-step-integration-with-job-listener-test]"),
+                startsWith("INFO PROGRESS start step. step name=[batchlet]"),
+                startsWith("INFO PROGRESS finish step. step name=[batchlet], step status=[SUCCEEDED]"),
+                startsWith("INFO PROGRESS start step. step name=[chunk]"),
+                startsWith("INFO PROGRESS chunk progress. write count=[10]"),
+                startsWith("INFO PROGRESS finish step. step name=[chunk], step status=[SUCCEEDED]"),
+                startsWith("INFO PROGRESS finish job. job name=[multi-step-integration-with-job-listener-test], batch status=[COMPLETED]")));
     }
 
     /**
@@ -767,25 +775,26 @@ public class BatchIntegrationTest {
         final JobExecution execution = resource.startJob("multi-step-integration-with-job-listener-test");
 
         // -------------------------------------------------- assert log (1)
-        String[] expected1 = { "INFO PROGRESS start job. job name=[multi-step-integration-with-job-listener-test]",
-            "INFO PROGRESS start step. step name=[batchlet]",
-            "INFO PROGRESS finish step. step name=[batchlet], step status=[SUCCEEDED]",
-            "INFO PROGRESS start step. step name=[chunk]",
-            "INFO PROGRESS finish step. step name=[chunk], step status=[FAILED]",
-            "INFO PROGRESS finish job. job name=[multi-step-integration-with-job-listener-test], batch status=[FAILED]" };
-        OnMemoryLogWriter.assertLogContains("writer.appLog", expected1);
-        OnMemoryLogWriter.clear();
+        assertThat(InMemoryAppender.getLogMessages("PROGRESS"), contains(
+                startsWith("INFO PROGRESS start job. job name=[multi-step-integration-with-job-listener-test]"),
+                startsWith("INFO PROGRESS start step. step name=[batchlet]"),
+                startsWith("INFO PROGRESS finish step. step name=[batchlet], step status=[SUCCEEDED]"),
+                startsWith("INFO PROGRESS start step. step name=[chunk]"),
+                startsWith("INFO PROGRESS finish step. step name=[chunk], step status=[FAILED]"),
+                startsWith("INFO PROGRESS finish job. job name=[multi-step-integration-with-job-listener-test], batch status=[FAILED]")));
+        InMemoryAppender.clear();
 
         // -------------------------------------------------- restart batch job
         FileWriter.outputPath = outputFile;
         resource.restartJob(execution.getExecutionId());
 
         // -------------------------------------------------- assert log (2)
-        String[] expected2 = { "INFO PROGRESS start job. job name=[multi-step-integration-with-job-listener-test]",
-            "INFO PROGRESS start step. step name=[chunk]",
-            "INFO PROGRESS finish step. step name=[chunk], step status=[SUCCEEDED]",
-            "INFO PROGRESS finish job. job name=[multi-step-integration-with-job-listener-test], batch status=[COMPLETED]" };
-        OnMemoryLogWriter.assertLogContains("writer.appLog", expected2);
+        assertThat(InMemoryAppender.getLogMessages("PROGRESS"), contains(
+                startsWith("INFO PROGRESS start job. job name=[multi-step-integration-with-job-listener-test]"),
+                startsWith("INFO PROGRESS start step. step name=[chunk]"),
+                startsWith("INFO PROGRESS chunk progress. write count=[10]"),
+                startsWith("INFO PROGRESS finish step. step name=[chunk], step status=[SUCCEEDED]"),
+                startsWith("INFO PROGRESS finish job. job name=[multi-step-integration-with-job-listener-test], batch status=[COMPLETED]")));
     }
 
     /**
@@ -801,15 +810,14 @@ public class BatchIntegrationTest {
         resource.startJob("chunk-integration-test");
 
         // -------------------------------------------------- assert log
-        String[] expected = {
-            "INFO PROGRESS start job. job name=[chunk-integration-test]",
-            "INFO PROGRESS start step. step name=[myStep]",
-            "INFO PROGRESS chunk progress. write count=[10]",
-            "INFO PROGRESS chunk progress. write count=[20]",
-            "INFO PROGRESS chunk progress. write count=[25]",
-            "INFO PROGRESS finish step. step name=[myStep], step status=[SUCCEEDED]",
-            "INFO PROGRESS finish job. job name=[chunk-integration-test], batch status=[COMPLETED]" };
-        OnMemoryLogWriter.assertLogContains("writer.appLog", expected);
+        assertThat(InMemoryAppender.getLogMessages("PROGRESS"), contains(
+                startsWith("INFO PROGRESS start job. job name=[chunk-integration-test]"),
+                startsWith("INFO PROGRESS start step. step name=[myStep]"),
+                startsWith("INFO PROGRESS chunk progress. write count=[10]"),
+                startsWith("INFO PROGRESS chunk progress. write count=[20]"),
+                startsWith("INFO PROGRESS chunk progress. write count=[25]"),
+                startsWith("INFO PROGRESS finish step. step name=[myStep], step status=[SUCCEEDED]"),
+                startsWith("INFO PROGRESS finish job. job name=[chunk-integration-test], batch status=[COMPLETED]")));
     }
 }
 
