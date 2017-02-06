@@ -1,5 +1,5 @@
 group = 'com.nablarch.framework'
-version = '1.0.2'
+version = '1.1.0'
 description = 'jBatch(JSR352)に準拠したバッチ処理方式を実現する'
 
 buildscript {
