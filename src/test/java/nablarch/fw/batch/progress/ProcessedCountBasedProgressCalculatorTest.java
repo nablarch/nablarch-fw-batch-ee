@@ -12,9 +12,9 @@ import mockit.Expectations;
 import mockit.Mocked;
 
 /**
- * {@link BasicProgressCalculator}のテスト。
+ * {@link ProcessedCountBasedProgressCalculator}のテスト。
  */
-public class BasicProgressCalculatorTest {
+public class ProcessedCountBasedProgressCalculatorTest {
 
     @Test
     public void 処理対象件数と処理済み件数からTPSと終了予測時間が求められること(
@@ -29,7 +29,7 @@ public class BasicProgressCalculatorTest {
             result = expectedEstimatedEndTime;
         }};
 
-        final BasicProgressCalculator sut = new BasicProgressCalculator(100L);
+        final ProcessedCountBasedProgressCalculator sut = new ProcessedCountBasedProgressCalculator(100L);
         final Progress progress = sut.calculate(10);
 
         assertThat(progress, allOf(
