@@ -1,7 +1,6 @@
 package nablarch.fw.batch.progress;
 
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
@@ -9,9 +8,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-import nablarch.test.support.log.app.OnMemoryLogWriter;
+import nablarch.fw.batch.ee.integration.InMemoryAppender;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -24,7 +22,7 @@ public class ProgressLogPrinterTest {
 
     @Before
     public void setUp() throws Exception {
-        OnMemoryLogWriter.clear();
+        InMemoryAppender.clear();
     }
 
     @Test
@@ -33,7 +31,7 @@ public class ProgressLogPrinterTest {
         final Progress progress = new Progress(2.345, estimatedEndTime, 100);
         sut.print(progress);
 
-        final List<String> messages = OnMemoryLogWriter.getMessages("writer.appFile");
+        final List<String> messages = InMemoryAppender.getLogMessages("ALL");
         if (messages.isEmpty()) {
             fail("ログが出力されているはず");
         }
