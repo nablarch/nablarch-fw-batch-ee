@@ -8,9 +8,14 @@ import nablarch.core.log.LoggerManager;
  *
  * @author siosio
  */
-public class ProgressLogger {
+public final class ProgressLogger {
 
+    /** ロガー */
     private static final Logger LOGGER = LoggerManager.get("progress");
+
+    /** 隠蔽コンストラクタ */
+    private ProgressLogger() {
+    }
 
     /**
      * メッセージをログに出力する。

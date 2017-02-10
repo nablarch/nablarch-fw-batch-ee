@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.List;
 
 import nablarch.fw.batch.ee.integration.InMemoryAppender;
+import nablarch.fw.batch.ee.progress.JBatchProcessName;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -29,16 +30,16 @@ public class ProgressLogPrinterTest {
     public void 進捗状況がログに出力できること() throws Exception {
         final Date estimatedEndTime = new Date();
         final Progress progress = new Progress(2.345, estimatedEndTime, 100);
-        sut.print(progress);
+        sut.print(new JBatchProcessName("test-job", "test-step"), progress);
 
-        final List<String> messages = InMemoryAppender.getLogMessages("ALL");
+        final List<String> messages = InMemoryAppender.getLogMessages("PROGRESS");
         if (messages.isEmpty()) {
             fail("ログが出力されているはず");
         }
         final String message = messages.get(0);
         assertThat(message,
-                containsString("tps: [2.35], estimated end time: ["
-                        + new SimpleDateFormat("yyyy/MM/dd hh:mm:ss.SSS").format(estimatedEndTime) + "]," 
+                containsString("job name: [test-job] step name: [test-step] tps: [2.35] estimated end time: ["
+                        + new SimpleDateFormat("yyyy/MM/dd hh:mm:ss.SSS").format(estimatedEndTime) + "]" 
                         + " remaining count: [100]"));
     }
 }
