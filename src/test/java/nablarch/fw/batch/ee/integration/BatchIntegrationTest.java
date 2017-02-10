@@ -1,9 +1,12 @@
 package nablarch.fw.batch.ee.integration;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.CoreMatchers.startsWith;
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertThat;
 
 import java.io.BufferedReader;
@@ -11,6 +14,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
+import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collections;
@@ -21,6 +25,9 @@ import java.util.Map;
 import java.util.logging.LogManager;
 import javax.batch.runtime.BatchStatus;
 import javax.batch.runtime.JobExecution;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.Response;
 
 import mockit.Deencapsulation;
 import nablarch.core.db.statement.SqlResultSet;
@@ -31,8 +38,12 @@ import nablarch.fw.batch.ee.initializer.RepositoryInitializer;
 import nablarch.fw.batch.ee.integration.app.FileWriter;
 import nablarch.fw.batch.ee.integration.app.RegisterBatchOutputTable;
 import nablarch.fw.batch.ee.integration.app.ThrowErrorWriter;
+
+import com.sun.deploy.util.SessionState;
 import org.jboss.arquillian.container.test.api.Deployment;
+import org.jboss.arquillian.container.test.api.RunAsClient;
 import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ArchivePath;
 import org.jboss.shrinkwrap.api.Filter;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -818,6 +829,52 @@ public class BatchIntegrationTest {
                 startsWith("INFO PROGRESS chunk progress. write count=[25]"),
                 startsWith("INFO PROGRESS finish step. step name=[myStep], step status=[SUCCEEDED]"),
                 startsWith("INFO PROGRESS finish job. job name=[chunk-integration-test], batch status=[COMPLETED]")));
+    }
+
+    /**
+     * ステップ単位で値を持ち回ることができること
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testStepScoped() throws Exception {
+        // -------------------------------------------------- execute batch job
+        final JobExecution execution = resource.startJob("step-scoped-integration-test");
+        assertThat(execution.getBatchStatus(), is(BatchStatus.COMPLETED));
+    }
+
+    /**
+     * アプリ側で{@link javax.batch.runtime.context.StepContext#setTransientUserData(Object)}を使用された場合に例外を送出すること
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testStepScoped_useTransientUserData() throws Exception {
+        // -------------------------------------------------- execute batch job
+        final JobExecution execution = resource.startJob("step-scoped-error-integration-test");
+        assertThat(execution.getBatchStatus(), is(BatchStatus.FAILED));
+
+        // -------------------------------------------------- assert log
+        assertThat(InMemoryAppender.getLogMessages("ALL"), hasItem(allOf(
+                containsString("javax.batch.operations.BatchRuntimeException"),
+                containsString("TransientUserData of StepContext must be StepScopedHolder type."))));
+
+    }
+
+    @Test
+    @RunAsClient
+    public void RESTアクセスではStepContextが存在しないためStepScopedなBeanは利用できないこと(
+            @ArquillianResource URI deploymentUri) throws Exception {
+        
+        final Response response = ClientBuilder.newClient()
+                                               .target(deploymentUri)
+                                               .path("/api/hello")
+                                               .request()
+                                               .get();
+
+        assertThat(response.getStatus(), is(500));
+        assertThat(response.readEntity(String.class),
+                containsString("No active contexts for scope type nablarch.fw.batch.ee.cdi.StepScoped"));
     }
 }
 
