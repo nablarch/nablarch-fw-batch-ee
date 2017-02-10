@@ -10,10 +10,11 @@ import java.text.SimpleDateFormat;
 public class ProgressLogPrinter implements ProgressPrinter {
     
     @Override
-    public void print(final Progress progress) {
+    public void print(final ProcessName processName, final Progress progress) {
         final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd hh:mm:ss.SSS");
-        
-        ProgressLogger.write(String.format("tps: [%.2f], estimated end time: [%s], remaining count: [%d]",
+
+        ProgressLogger.write(String.format("%s tps: [%.2f] estimated end time: [%s] remaining count: [%d]",
+                processName.formatProcessName(),
                 progress.getTps(),
                 dateFormat.format(progress.getEstimatedEndTime()),
                 progress.getRemainingCount()));

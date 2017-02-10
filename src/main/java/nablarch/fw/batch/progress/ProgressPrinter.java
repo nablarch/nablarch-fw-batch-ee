@@ -13,7 +13,8 @@ public interface ProgressPrinter {
     /**
      * 進捗状況を出力する。
      *
+     * @param processName プロセス名
      * @param progress 進捗状況
      */
-    void print(Progress progress);
+    void print(final ProcessName processName, Progress progress);
 }
