@@ -16,7 +16,7 @@
     </encoder>
   </appender>
 
-  <logger name="OPERATOR" level="ERROR">
+  <logger name="operator" level="ERROR">
     <appender-ref ref="OPERATION" />
   </logger>
 

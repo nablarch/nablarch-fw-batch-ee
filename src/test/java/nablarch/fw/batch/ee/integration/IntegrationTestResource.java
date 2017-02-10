@@ -90,6 +90,12 @@ public class IntegrationTestResource extends ExternalResource {
         insert.setString(1, "chunk-integration-test");
         insert.setString(2, "0");
         insert.addBatch();
+        insert.setString(1, "operator-batchlet-test");
+        insert.setString(2, "0");
+        insert.addBatch();
+        insert.setString(1, "operator-chunk-test");
+        insert.setString(2, "0");
+        insert.addBatch();
         insert.executeBatch();
         insert.close();
         connection.commit();

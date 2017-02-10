@@ -3,7 +3,11 @@ package nablarch.fw.batch.ee.integration;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.CoreMatchers.startsWith;
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
 import java.io.BufferedReader;
@@ -818,6 +822,84 @@ public class BatchIntegrationTest {
                 startsWith("INFO PROGRESS chunk progress. write count=[25]"),
                 startsWith("INFO PROGRESS finish step. step name=[myStep], step status=[SUCCEEDED]"),
                 startsWith("INFO PROGRESS finish job. job name=[chunk-integration-test], batch status=[COMPLETED]")));
+    }
+
+    /**
+     * batchlet実行時に運用通知ログが出力されること。
+     */
+    @Test
+    public void testOperationLogBatchlet() throws Exception {
+
+        // -------------------------------------------------- clear output table
+        resource.clearBatchOutputTable();
+
+        // -------------------------------------------------- execute batch job
+        JobExecution execution = resource.startJob("operator-batchlet-test");
+
+        // -------------------------------------------------- assert log
+        assertThat("運用者向けのメッセージのみ出力されていること",
+                InMemoryAppender.getLogMessages("OPERATION"), contains(allOf(
+                        startsWith("ERROR operator ファイルの読み込みに失敗しました。ファイルが存在するか確認してください。"),
+                        not(containsString("FileNotFoundException")))));
+
+        assertThat("運用者向けのメッセージと合わせてスタックトレースも出力されていること",
+                InMemoryAppender.getLogMessages("ALL"), hasItem(allOf(
+                        startsWith("ERROR operator ファイルの読み込みに失敗しました。ファイルが存在するか確認してください。"),
+                        containsString("FileNotFoundException"))));
+
+        // -------------------------------------------------- assert batch status
+        assertThat(execution.getBatchStatus(), is(BatchStatus.FAILED));
+    }
+
+    /**
+     * chunk実行時に運用通知ログが出力されること。
+     */
+    @Test
+    public void testOperationLogChunk() throws Exception {
+
+        // -------------------------------------------------- clear output table
+        resource.clearBatchOutputTable();
+
+        // -------------------------------------------------- execute batch job
+        JobExecution execution = resource.startJob("operator-chunk-test");
+
+        // -------------------------------------------------- assert log
+        assertThat("運用者向けのメッセージのみ出力されていること",
+                InMemoryAppender.getLogMessages("OPERATION"), contains(allOf(
+                        startsWith("ERROR operator ファイルの書き込みに失敗しました。他のプロセスによってファイルがロックされていないか確認してください。"),
+                        not(containsString("IllegalStateException")))));
+
+        assertThat("運用者向けのメッセージと合わせてスタックトレースも出力されていること",
+                InMemoryAppender.getLogMessages("ALL"), hasItem(allOf(
+                        startsWith("ERROR operator ファイルの書き込みに失敗しました。他のプロセスによってファイルがロックされていないか確認してください。"),
+                        containsString("IllegalStateException"))));
+
+        // -------------------------------------------------- assert batch status
+        assertThat(execution.getBatchStatus(), is(BatchStatus.FAILED));
+    }
+
+    /**
+     * 予期せぬ例外が発生した場合は運用者向けにログが出力されないこと
+     */
+    @Test
+    public void testSystemError() throws Exception {
+
+        // -------------------------------------------------- clear output table
+        resource.clearBatchOutputTable();
+
+        // -------------------------------------------------- execute batch job
+        JobExecution execution = resource.startJob("batchlet-error-integration-test");
+
+        // -------------------------------------------------- assert log
+        assertThat("運用者向けのメッセージは出力されないこと",
+                InMemoryAppender.getLogMessages("OPERATION"), is(nullValue()));
+
+        assertThat("スタックトレースが出力されていること",
+                InMemoryAppender.getLogMessages("ALL"),
+                hasItem(containsString("StackOverflowError")));
+
+        // -------------------------------------------------- assert batch status
+        assertThat(execution.getBatchStatus(), is(BatchStatus.FAILED));
     }
 }
 
