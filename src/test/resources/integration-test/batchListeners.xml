@@ -39,7 +39,9 @@
   <!-- 重複起動チェックのリスナーを外したJobListenerリスト -->
   <list name="skip-chunk-integration-test.jobListeners" />
   <list name="error-batchlet-integration-test.jobListeners" />
-  <list name="multi-step-integration-test.jobListeners" />
+  <list name="multi-step-integration-test.jobListeners">
+    <component class="nablarch.fw.batch.ee.listener.job.JobProgressLogListener" />
+  </list>
   <list name="chunk-listener-error-integration-test.jobListeners" />
   <list name="item-write-listener-error-on-before-write-test.jobListeners" />
   <list name="item-write-listener-error-on-after-write-test.jobListeners" />

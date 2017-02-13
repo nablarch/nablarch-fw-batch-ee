@@ -38,7 +38,7 @@ public class TpsCalculatorTest {
     public void 処理開始時間が未来の場合は例外が送出されること() throws Exception {
         expectedException.expect(IllegalArgumentException.class);
         expectedException.expectMessage("start time is invalid. start time must set past time.");
-        final long startTime = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(1);
+        final long startTime = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(100);
         sut.calculate(startTime, 1);
     }
 
