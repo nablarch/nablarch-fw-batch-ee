@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.logging.LogManager;
 import javax.batch.runtime.BatchStatus;
 import javax.batch.runtime.JobExecution;
-import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Response;
 
@@ -40,7 +39,6 @@ import nablarch.fw.batch.ee.integration.app.FileWriter;
 import nablarch.fw.batch.ee.integration.app.RegisterBatchOutputTable;
 import nablarch.fw.batch.ee.integration.app.ThrowErrorWriter;
 
-import com.sun.deploy.util.SessionState;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.container.test.api.RunAsClient;
 import org.jboss.arquillian.junit.Arquillian;
@@ -232,6 +230,33 @@ public class BatchIntegrationTest {
             assertThat(row.getInteger("id"), is(index));
             assertThat(row.getString("name"), is("name_" + index));
         }
+
+        List<String> messages = InMemoryAppender.getLogMessages("PROGRESS");
+        assertThat(messages, contains(
+                startsWith("INFO progress start job. job name: [chunk-integration-test]"),
+                startsWith("INFO progress start step. job name: [chunk-integration-test] step name: [myStep]"),
+                startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] input count: [25]"),
+                startsWith("INFO progress chunk progress. write count=[10]"),
+                allOf(
+                        startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] tps:"),
+                        containsString("estimated end time:"),
+                        containsString("remaining count: [15]")
+                ),
+                startsWith("INFO progress chunk progress. write count=[20]"),
+                allOf(
+                        startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] tps:"),
+                        containsString("estimated end time:"),
+                        containsString("remaining count: [5]")
+                ),
+                startsWith("INFO progress chunk progress. write count=[25]"),
+                allOf(
+                        startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] tps:"),
+                        containsString("estimated end time:"),
+                        containsString("remaining count: [0]")
+                ),
+                startsWith("INFO progress finish step. job name: [chunk-integration-test] step name: [myStep] step status: [null]"),
+                startsWith("INFO progress finish job. job name: [chunk-integration-test]")
+        ));
     }
 
     /**
@@ -258,8 +283,24 @@ public class BatchIntegrationTest {
         final SqlResultSet rs = resource.findBatchOutputTable();
         assertThat("障害発生原因のレコード + 登録した10レコードが登録されているはず", rs.size(), is(11));
 
+        List<String> messages = InMemoryAppender.getLogMessages("PROGRESS");
+        assertThat(messages, contains(
+                startsWith("INFO progress start job. job name: [chunk-integration-test]"),
+                startsWith("INFO progress start step. job name: [chunk-integration-test] step name: [myStep]"),
+                startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] input count: [25]"),
+                startsWith("INFO progress chunk progress. write count=[10]"),
+                allOf(
+                        startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] tps:"),
+                        containsString("estimated end time:"),
+                        containsString("remaining count: [15]")
+                ),
+                startsWith("INFO progress finish step. job name: [chunk-integration-test] step name: [myStep] step status: [null]"),
+                startsWith("INFO progress finish job. job name: [chunk-integration-test]")
+        ));
+
         // -------------------------------------------------- clear abnormal data
         resource.deleteBatchOutputTable(18);
+        InMemoryAppender.clear();
 
         // -------------------------------------------------- restart batch job
         final JobExecution restartExecution = resource.restartJob(execution.getExecutionId());
@@ -274,6 +315,29 @@ public class BatchIntegrationTest {
             assertThat(row.getInteger("id"), is(index));
             assertThat(row.getString("name"), is("name_" + index));
         }
+
+        messages = InMemoryAppender.getLogMessages("PROGRESS");
+        assertThat(messages, contains(
+                startsWith("INFO progress start job. job name: [chunk-integration-test]"),
+                startsWith("INFO progress start step. job name: [chunk-integration-test] step name: [myStep]"),
+                startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] input count: [15]"),
+                startsWith("INFO progress chunk progress. write count=[10]"),
+                allOf(
+                        startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] tps:"),
+                        containsString("estimated end time:"),
+                        containsString("remaining count: [5]")
+                ),
+                startsWith("INFO progress chunk progress. write count=[15]"),
+                allOf(
+                        startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] tps:"),
+                        containsString("estimated end time:"),
+                        containsString("remaining count: [0]")
+                ),
+                startsWith("INFO progress finish step. job name: [chunk-integration-test] step name: [myStep] step status: [null]"),
+                startsWith("INFO progress finish job. job name: [chunk-integration-test]")
+        ));
+
+
     }
 
     /**
@@ -470,6 +534,35 @@ public class BatchIntegrationTest {
         } finally {
             reader.close();
         }
+
+        List<String> messages = InMemoryAppender.getLogMessages("PROGRESS");
+        assertThat(messages, contains(
+                startsWith("INFO progress start job. job name: [multi-step-integration-test]"),
+                startsWith("INFO progress start step. job name: [multi-step-integration-test] step name: [batchlet]"),
+                startsWith("INFO progress job name: [multi-step-integration-test] step name: [batchlet] input count: [10]"),
+                allOf(
+                        startsWith("INFO progress job name: [multi-step-integration-test] step name: [batchlet] tps:"),
+                        containsString("estimated end time:"),
+                        containsString("remaining count: [5]")
+                ),
+                allOf(
+                        startsWith("INFO progress job name: [multi-step-integration-test] step name: [batchlet] tps:"),
+                        containsString("estimated end time:"),
+                        containsString("remaining count: [0]")
+                ),
+                startsWith("INFO progress finish step. job name: [multi-step-integration-test] step name: [batchlet] step status: [null]"),
+                startsWith("INFO progress start step. job name: [multi-step-integration-test] step name: [chunk]"),
+                startsWith("INFO progress job name: [multi-step-integration-test] step name: [chunk] input count: [10]"),
+                startsWith("INFO progress chunk progress. write count=[10]"),
+                allOf(
+                        startsWith("INFO progress job name: [multi-step-integration-test] step name: [chunk] tps:"),
+                        containsString("estimated end time:"),
+                        containsString("remaining count: [0]")
+                ),
+                startsWith("INFO progress finish step. job name: [multi-step-integration-test] step name: [chunk] step status: [null]"),
+                startsWith("INFO progress finish job. job name: [multi-step-integration-test]")
+
+        ));
     }
 
     /**
@@ -500,7 +593,30 @@ public class BatchIntegrationTest {
         // -------------------------------------------------- assert output table
         assertThat("2番めのステップで出力するファイルは存在していない", outputFile.exists(), is(false));
 
+        List<String> messages = InMemoryAppender.getLogMessages("PROGRESS");
+        assertThat(messages, contains(
+                startsWith("INFO progress start job. job name: [multi-step-integration-test]"),
+                startsWith("INFO progress start step. job name: [multi-step-integration-test] step name: [batchlet]"),
+                startsWith("INFO progress job name: [multi-step-integration-test] step name: [batchlet] input count: [10]"),
+                allOf(
+                        startsWith("INFO progress job name: [multi-step-integration-test] step name: [batchlet] tps:"),
+                        containsString("estimated end time:"),
+                        containsString("remaining count: [5]")
+                ),
+                allOf(
+                        startsWith("INFO progress job name: [multi-step-integration-test] step name: [batchlet] tps:"),
+                        containsString("estimated end time:"),
+                        containsString("remaining count: [0]")
+                ),
+                startsWith("INFO progress finish step. job name: [multi-step-integration-test] step name: [batchlet] step status: [null]"),
+                startsWith("INFO progress start step. job name: [multi-step-integration-test] step name: [chunk]"),
+                startsWith("INFO progress job name: [multi-step-integration-test] step name: [chunk] input count: [10]"),
+                startsWith("INFO progress finish step. job name: [multi-step-integration-test] step name: [chunk] step status: [null]"),
+                startsWith("INFO progress finish job. job name: [multi-step-integration-test]")
+        ));
+
         // -------------------------------------------------- restart job
+        InMemoryAppender.clear();
         FileWriter.outputPath = outputFile;
         final JobExecution restartExecution = resource.restartJob(execution.getExecutionId());
         assertThat("障害原因を取り除いたのでJOBが正常終了する", restartExecution.getBatchStatus(), is(BatchStatus.COMPLETED));
@@ -517,6 +633,21 @@ public class BatchIntegrationTest {
         } finally {
             reader.close();
         }
+
+        messages = InMemoryAppender.getLogMessages("PROGRESS");
+        assertThat(messages, contains(
+                startsWith("INFO progress start job. job name: [multi-step-integration-test]"),
+                startsWith("INFO progress start step. job name: [multi-step-integration-test] step name: [chunk]"),
+                startsWith("INFO progress job name: [multi-step-integration-test] step name: [chunk] input count: [10]"),
+                startsWith("INFO progress chunk progress. write count=[10]"),
+                allOf(
+                        startsWith("INFO progress job name: [multi-step-integration-test] step name: [chunk] tps:"),
+                        containsString("estimated end time:"),
+                        containsString("remaining count: [0]")
+                ),
+                startsWith("INFO progress finish step. job name: [multi-step-integration-test] step name: [chunk] step status: [null]"),
+                startsWith("INFO progress finish job. job name: [multi-step-integration-test]")
+        ));
     }
 
     /**
@@ -718,10 +849,21 @@ public class BatchIntegrationTest {
 
         // -------------------------------------------------- assert log
         assertThat(InMemoryAppender.getLogMessages("PROGRESS"), contains(
-                startsWith("INFO PROGRESS start job. job name=[batchlet-integration-test]"),
-                startsWith("INFO PROGRESS start step. step name=[step1]"),
-                startsWith("INFO PROGRESS finish step. step name=[step1], step status=[SUCCEEDED]"),
-                startsWith("INFO PROGRESS finish job. job name=[batchlet-integration-test], batch status=[COMPLETED]")));
+                startsWith("INFO progress start job. job name: [batchlet-integration-test]"),
+                startsWith("INFO progress start step. job name: [batchlet-integration-test] step name: [step1]"),
+                startsWith("INFO progress job name: [batchlet-integration-test] step name: [step1] input count: [10]"),
+                allOf(
+                        startsWith("INFO progress job name: [batchlet-integration-test] step name: [step1] tps:"),
+                        containsString("estimated end time:"),
+                        containsString("remaining count: [5]")
+                ),
+                allOf(
+                        startsWith("INFO progress job name: [batchlet-integration-test] step name: [step1] tps:"),
+                        containsString("estimated end time:"),
+                        containsString("remaining count: [0]")
+                ),
+                startsWith("INFO progress finish step. job name: [batchlet-integration-test] step name: [step1] step status: [null]"),
+                startsWith("INFO progress finish job. job name: [batchlet-integration-test]")));
     }
 
     /**
@@ -741,10 +883,16 @@ public class BatchIntegrationTest {
 
         // -------------------------------------------------- assert log
         assertThat(InMemoryAppender.getLogMessages("PROGRESS"), contains(
-                startsWith("INFO PROGRESS start job. job name=[batchlet-integration-test]"),
-                startsWith("INFO PROGRESS start step. step name=[step1]"),
-                startsWith("INFO PROGRESS finish step. step name=[step1], step status=[FAILED]"),
-                startsWith("INFO PROGRESS finish job. job name=[batchlet-integration-test], batch status=[FAILED]")));
+                startsWith("INFO progress start job. job name: [batchlet-integration-test]"),
+                startsWith("INFO progress start step. job name: [batchlet-integration-test] step name: [step1]"),
+                startsWith("INFO progress job name: [batchlet-integration-test] step name: [step1] input count: [10]"),
+                allOf(
+                        startsWith("INFO progress job name: [batchlet-integration-test] step name: [step1] tps:"),
+                        containsString("estimated end time:"),
+                        containsString("remaining count: [5]")
+                ),
+                startsWith("INFO progress finish step. job name: [batchlet-integration-test] step name: [step1] step status: [null]"),
+                startsWith("INFO progress finish job. job name: [batchlet-integration-test]")));
     }
 
     /**
@@ -763,13 +911,30 @@ public class BatchIntegrationTest {
 
         // -------------------------------------------------- assert log
         assertThat(InMemoryAppender.getLogMessages("PROGRESS"), contains(
-                startsWith("INFO PROGRESS start job. job name=[multi-step-integration-with-job-listener-test]"),
-                startsWith("INFO PROGRESS start step. step name=[batchlet]"),
-                startsWith("INFO PROGRESS finish step. step name=[batchlet], step status=[SUCCEEDED]"),
-                startsWith("INFO PROGRESS start step. step name=[chunk]"),
-                startsWith("INFO PROGRESS chunk progress. write count=[10]"),
-                startsWith("INFO PROGRESS finish step. step name=[chunk], step status=[SUCCEEDED]"),
-                startsWith("INFO PROGRESS finish job. job name=[multi-step-integration-with-job-listener-test], batch status=[COMPLETED]")));
+                startsWith("INFO progress start job. job name: [multi-step-integration-with-job-listener-test]"),
+                startsWith("INFO progress start step. job name: [multi-step-integration-with-job-listener-test] step name: [batchlet]"),
+                startsWith("INFO progress job name: [multi-step-integration-with-job-listener-test] step name: [batchlet] input count: [10]"),
+                allOf(
+                        startsWith("INFO progress job name: [multi-step-integration-with-job-listener-test] step name: [batchlet] tps:"),
+                        containsString("estimated end time:"),
+                        containsString("remaining count: [5]")
+                ),
+                allOf(
+                        startsWith("INFO progress job name: [multi-step-integration-with-job-listener-test] step name: [batchlet] tps:"),
+                        containsString("estimated end time:"),
+                        containsString("remaining count: [0]")
+                ),
+                startsWith("INFO progress finish step. job name: [multi-step-integration-with-job-listener-test] step name: [batchlet] step status: [null]"),
+                startsWith("INFO progress start step. job name: [multi-step-integration-with-job-listener-test] step name: [chunk]"),
+                startsWith("INFO progress job name: [multi-step-integration-with-job-listener-test] step name: [chunk] input count: [10]"),
+                startsWith("INFO progress chunk progress. write count=[10]"),
+                allOf(
+                        startsWith("INFO progress job name: [multi-step-integration-with-job-listener-test] step name: [chunk] tps:"),
+                        containsString("estimated end time:"),
+                        containsString("remaining count: [0]")
+                ),
+                startsWith("INFO progress finish step. job name: [multi-step-integration-with-job-listener-test] step name: [chunk] step status: [null]"),
+                startsWith("INFO progress finish job. job name: [multi-step-integration-with-job-listener-test]")));
     }
 
     /**
@@ -788,12 +953,25 @@ public class BatchIntegrationTest {
 
         // -------------------------------------------------- assert log (1)
         assertThat(InMemoryAppender.getLogMessages("PROGRESS"), contains(
-                startsWith("INFO PROGRESS start job. job name=[multi-step-integration-with-job-listener-test]"),
-                startsWith("INFO PROGRESS start step. step name=[batchlet]"),
-                startsWith("INFO PROGRESS finish step. step name=[batchlet], step status=[SUCCEEDED]"),
-                startsWith("INFO PROGRESS start step. step name=[chunk]"),
-                startsWith("INFO PROGRESS finish step. step name=[chunk], step status=[FAILED]"),
-                startsWith("INFO PROGRESS finish job. job name=[multi-step-integration-with-job-listener-test], batch status=[FAILED]")));
+                startsWith("INFO progress start job. job name: [multi-step-integration-with-job-listener-test]"),
+                startsWith("INFO progress start step. job name: [multi-step-integration-with-job-listener-test] step name: [batchlet]"),
+                startsWith("INFO progress job name: [multi-step-integration-with-job-listener-test] step name: [batchlet] input count: [10]"),
+                allOf(
+                        startsWith("INFO progress job name: [multi-step-integration-with-job-listener-test] step name: [batchlet] tps:"),
+                        containsString("estimated end time:"),
+                        containsString("remaining count: [5]")
+                ),
+                allOf(
+                        startsWith("INFO progress job name: [multi-step-integration-with-job-listener-test] step name: [batchlet] tps:"),
+                        containsString("estimated end time:"),
+                        containsString("remaining count: [0]")
+                ),
+                startsWith("INFO progress finish step. job name: [multi-step-integration-with-job-listener-test] step name: [batchlet] step status: [null]"),
+                startsWith("INFO progress start step. job name: [multi-step-integration-with-job-listener-test] step name: [chunk]"),
+                startsWith("INFO progress job name: [multi-step-integration-with-job-listener-test] step name: [chunk] input count: [10]"),
+                startsWith("INFO progress finish step. job name: [multi-step-integration-with-job-listener-test] step name: [chunk] step status: [null]"),
+                startsWith("INFO progress finish job. job name: [multi-step-integration-with-job-listener-test]")
+        ));
         InMemoryAppender.clear();
 
         // -------------------------------------------------- restart batch job
@@ -802,11 +980,17 @@ public class BatchIntegrationTest {
 
         // -------------------------------------------------- assert log (2)
         assertThat(InMemoryAppender.getLogMessages("PROGRESS"), contains(
-                startsWith("INFO PROGRESS start job. job name=[multi-step-integration-with-job-listener-test]"),
-                startsWith("INFO PROGRESS start step. step name=[chunk]"),
-                startsWith("INFO PROGRESS chunk progress. write count=[10]"),
-                startsWith("INFO PROGRESS finish step. step name=[chunk], step status=[SUCCEEDED]"),
-                startsWith("INFO PROGRESS finish job. job name=[multi-step-integration-with-job-listener-test], batch status=[COMPLETED]")));
+                startsWith("INFO progress start job. job name: [multi-step-integration-with-job-listener-test]"),
+                startsWith("INFO progress start step. job name: [multi-step-integration-with-job-listener-test] step name: [chunk]"),
+                startsWith("INFO progress job name: [multi-step-integration-with-job-listener-test] step name: [chunk] input count: [10]"),
+                startsWith("INFO progress chunk progress. write count=[10]"),
+                allOf(
+                        startsWith("INFO progress job name: [multi-step-integration-with-job-listener-test] step name: [chunk] tps:"),
+                        containsString("estimated end time:"),
+                        containsString("remaining count: [0]")
+                ),
+                startsWith("INFO progress finish step. job name: [multi-step-integration-with-job-listener-test] step name: [chunk] step status: [null]"),
+                startsWith("INFO progress finish job. job name: [multi-step-integration-with-job-listener-test]")));
     }
 
     /**
@@ -823,13 +1007,30 @@ public class BatchIntegrationTest {
 
         // -------------------------------------------------- assert log
         assertThat(InMemoryAppender.getLogMessages("PROGRESS"), contains(
-                startsWith("INFO PROGRESS start job. job name=[chunk-integration-test]"),
-                startsWith("INFO PROGRESS start step. step name=[myStep]"),
-                startsWith("INFO PROGRESS chunk progress. write count=[10]"),
-                startsWith("INFO PROGRESS chunk progress. write count=[20]"),
-                startsWith("INFO PROGRESS chunk progress. write count=[25]"),
-                startsWith("INFO PROGRESS finish step. step name=[myStep], step status=[SUCCEEDED]"),
-                startsWith("INFO PROGRESS finish job. job name=[chunk-integration-test], batch status=[COMPLETED]")));
+                startsWith("INFO progress start job. job name: [chunk-integration-test]"),
+                startsWith("INFO progress start step. job name: [chunk-integration-test] step name: [myStep]"),
+                startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] input count: [25]"),
+                startsWith("INFO progress chunk progress. write count=[10]"),
+                allOf(
+                        startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] tps:"),
+                        containsString("estimated end time:"),
+                        containsString("remaining count: [15]")
+                ),
+                startsWith("INFO progress chunk progress. write count=[20]"),
+                allOf(
+                        startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] tps:"),
+                        containsString("estimated end time:"),
+                        containsString("remaining count: [5]")
+                ),
+                startsWith("INFO progress chunk progress. write count=[25]"),
+                allOf(
+                        startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] tps:"),
+                        containsString("estimated end time:"),
+                        containsString("remaining count: [0]")
+                ),
+                startsWith("INFO progress finish step. job name: [chunk-integration-test] step name: [myStep] step status: [null]"),
+                startsWith("INFO progress finish job. job name: [chunk-integration-test]")
+        ));
     }
 
     /**

@@ -41,7 +41,7 @@ public class ChunkProgressLogListenerTest {
     public void testAfterWrite() {
         sut.afterWrite(new NablarchListenerContext(mockJobContext, mockStepContext), null);
 
-        assertThat(InMemoryAppender.getLogMessages("PROGRESS"), contains(startsWith("INFO PROGRESS chunk progress. write count=[0]")));
+        assertThat(InMemoryAppender.getLogMessages("PROGRESS"), contains(startsWith("INFO progress chunk progress. write count=[0]")));
     }
 
 }

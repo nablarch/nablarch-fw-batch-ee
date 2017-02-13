@@ -28,9 +28,9 @@ import mockit.Mocked;
 import mockit.NonStrictExpectations;
 
 /**
- * {@link ProgressManager}のテスト。
+ * {@link BasicProgressManager}のテスト。
  */
-public class ProgressManagerTest {
+public class BasicProgressManagerTest {
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -79,7 +79,7 @@ public class ProgressManagerTest {
             progressCalculator.calculate(100);
             returns(new Progress(1.23, estimatedDate1, 12245), new Progress(1.21, estimatedDate2, 12205));
         }};
-        final ProgressManager sut = new ProgressManager(mockJobContext, mockStepContext);
+        final ProgressManager sut = new BasicProgressManager(mockJobContext, mockStepContext);
         sut.setInputCount(12345);
         sut.outputProgressInfo();
         sut.outputProgressInfo();
@@ -98,10 +98,59 @@ public class ProgressManagerTest {
     }
 
     @Test
+    public void 入力件数を明示的に指定して進捗ログが出力できること(@Mocked final ProcessedCountBasedProgressCalculator progressCalculator) throws Exception {
+        final SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd hh:mm:ss.SSS");
+        final Date estimatedDate1 = new Date();
+        TimeUnit.MILLISECONDS.sleep(100);
+        final Date estimatedDate2 = new Date();
+
+        new NonStrictExpectations() {{
+            progressCalculator.calculate(1000);
+            result = new Progress(1.23, estimatedDate1, 9000);
+            progressCalculator.calculate(2000);
+            result = new Progress(1.22, estimatedDate2, 7000);
+        }};
+
+        final ProgressManager sut = new BasicProgressManager(mockJobContext, mockStepContext);
+        sut.setInputCount(10000);
+        sut.outputProgressInfo(1000);
+        sut.outputProgressInfo(2000);
+
+        final List<String> messages = InMemoryAppender.getLogMessages("PROGRESS");
+        assertThat(messages, contains(
+                containsString("job name: [test-job] step name: [test-step] input count: [10000]"),
+                containsString("job name: [test-job] step name: [test-step] tps: [1.23] estimated end time: ["
+                        + format.format(estimatedDate1) + "] "
+                        + "remaining count: [9000]"),
+                containsString("job name: [test-job] step name: [test-step] tps: [1.22] estimated end time: ["
+                        + format.format(estimatedDate2) + "] "
+                        + "remaining count: [7000]")
+                )
+        );
+    }
+
+    @Test
     public void 入力件数を設定せずに進捗ログを出力しようとした場合はエラーとなること() throws Exception {
+
+        new NonStrictExpectations() {{
+            mockStepContext.getMetrics();
+            result = new Metric[] {
+                    new Metric() {
+                        @Override
+                        public MetricType getType() {
+                            return MetricType.READ_COUNT;
+                        }
+                        @Override
+                        public long getValue() {
+                            return 100;
+                        }
+                    }
+            };
+        }};
+
         expectedException.expect(IllegalStateException.class);
         expectedException.expectMessage("input count is not set. must set input count. job name: [test-job] step name: [test-step]");
-        final ProgressManager sut = new ProgressManager(mockJobContext, mockStepContext);
+        final ProgressManager sut = new BasicProgressManager(mockJobContext, mockStepContext);
         sut.outputProgressInfo();
     }
 
@@ -114,7 +163,7 @@ public class ProgressManagerTest {
         expectedException.expect(BatchRuntimeException.class);
         expectedException.expectMessage("failed to StepContext#getMetrics");
         
-        final ProgressManager sut = new ProgressManager(mockJobContext, mockStepContext);
+        final ProgressManager sut = new BasicProgressManager(mockJobContext, mockStepContext);
         sut.setInputCount(1);
         sut.outputProgressInfo();
     }

@@ -24,10 +24,10 @@ public class TpsCalculator {
             throw new IllegalArgumentException("processed count is invalid. processing count must set 1 or more.");
         }
         final long processedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
-        if (processedTime <= 0L) {
+        if (processedTime < 0L) {
             throw new IllegalArgumentException("start time is invalid. start time must set past time.");
         }
-        final double tps = (double) processedCount / processedTime;
+        final double tps = (double) processedCount / (processedTime == 0 ? 1 : processedTime);
         return tps * 1000;
     }
 }

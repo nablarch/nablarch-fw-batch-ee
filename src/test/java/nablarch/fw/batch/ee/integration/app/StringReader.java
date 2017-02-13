@@ -8,6 +8,8 @@ import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import nablarch.fw.batch.ee.progress.ProgressManager;
+
 /**
  * プロパティで指定された数までの連番を文字列で返すリーダー
  */
@@ -23,6 +25,13 @@ public class StringReader extends AbstractItemReader {
 
     private long index = 1;
 
+    private final ProgressManager progressManager;
+
+    @Inject
+    public StringReader(ProgressManager progressManager) {
+        this.progressManager = progressManager;
+    }
+
     @Override
     public void open(Serializable checkpoint) throws Exception {
         if (checkpoint instanceof Long) {
@@ -31,6 +40,7 @@ public class StringReader extends AbstractItemReader {
             index = 1;
         }
         maxLong = Long.parseLong(max);
+        progressManager.setInputCount(maxLong - (index - 1));
     }
 
     @Override

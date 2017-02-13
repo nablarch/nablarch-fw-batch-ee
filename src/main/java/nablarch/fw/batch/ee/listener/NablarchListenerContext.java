@@ -62,6 +62,15 @@ public class NablarchListenerContext {
     }
 
     /**
+     * ステップの終了ステータスを取得する。
+     *
+     * @return ステップの終了ステータス
+     */
+    public String getStepExitStatus() {
+        return stepContext.getExitStatus();
+    }
+
+    /**
      * 終了ステータスを取得する。
      * @return 終了ステータス
      */
