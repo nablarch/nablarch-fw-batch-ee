@@ -31,6 +31,7 @@ import nablarch.core.db.statement.SqlResultSet;
 import nablarch.core.db.statement.SqlRow;
 import nablarch.core.repository.ObjectLoader;
 import nablarch.core.repository.SystemRepository;
+import nablarch.fw.batch.ee.Main;
 import nablarch.fw.batch.ee.initializer.RepositoryInitializer;
 import nablarch.fw.batch.ee.integration.app.FileWriter;
 import nablarch.fw.batch.ee.integration.app.RegisterBatchOutputTable;
@@ -46,6 +47,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.contrib.java.lang.system.Assertion;
+import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.slf4j.bridge.SLF4JBridgeHandler;
@@ -60,6 +63,9 @@ public class BatchIntegrationTest {
 
     @Rule
     public IntegrationTestResource resource = new IntegrationTestResource();
+
+    @Rule
+    public ExpectedSystemExit exit = ExpectedSystemExit.none();
 
     @Deployment
     public static WebArchive createDeployment() {
@@ -705,15 +711,21 @@ public class BatchIntegrationTest {
         // -------------------------------------------------- clear output table
         resource.clearBatchOutputTable();
 
-        // -------------------------------------------------- execute batch job
-        resource.startJob("batchlet-integration-test");
+        exit.expectSystemExitWithStatus(0);
+        exit.checkAssertionAfterwards(new Assertion() {
+            @Override
+            public void checkAssertion() throws Exception {
+                // -------------------------------------------------- assert log
+                assertThat(InMemoryAppender.getLogMessages("PROGRESS"), contains(
+                        startsWith("INFO PROGRESS start job. job name=[batchlet-integration-test]"),
+                        startsWith("INFO PROGRESS start step. step name=[step1]"),
+                        startsWith("INFO PROGRESS finish step. step name=[step1], step status=[SUCCEEDED]"),
+                        startsWith("INFO PROGRESS finish job. job name=[batchlet-integration-test], batch status=[COMPLETED]")));
+            }
+        });
 
-        // -------------------------------------------------- assert log
-        assertThat(InMemoryAppender.getLogMessages("PROGRESS"), contains(
-                startsWith("INFO PROGRESS start job. job name=[batchlet-integration-test]"),
-                startsWith("INFO PROGRESS start step. step name=[step1]"),
-                startsWith("INFO PROGRESS finish step. step name=[step1], step status=[SUCCEEDED]"),
-                startsWith("INFO PROGRESS finish job. job name=[batchlet-integration-test], batch status=[COMPLETED]")));
+        // -------------------------------------------------- execute batch job
+        Main.main("batchlet-integration-test");
     }
 
     /**
@@ -728,15 +740,20 @@ public class BatchIntegrationTest {
         // -------------------------------------------------- add initial data
         resource.insertBatchOutputTable(9);
 
+        exit.expectSystemExitWithStatus(1);
+        exit.checkAssertionAfterwards(new Assertion() {
+            @Override
+            public void checkAssertion() throws Exception {
+                // -------------------------------------------------- assert log
+                assertThat(InMemoryAppender.getLogMessages("PROGRESS"), contains(
+                        startsWith("INFO PROGRESS start job. job name=[batchlet-integration-test]"),
+                        startsWith("INFO PROGRESS start step. step name=[step1]"),
+                        startsWith("INFO PROGRESS finish step. step name=[step1], step status=[FAILED]"),
+                        startsWith("INFO PROGRESS finish job. job name=[batchlet-integration-test], batch status=[FAILED]")));
+            }
+        });
         // -------------------------------------------------- execute batch job
-        resource.startJob("batchlet-integration-test");
-
-        // -------------------------------------------------- assert log
-        assertThat(InMemoryAppender.getLogMessages("PROGRESS"), contains(
-                startsWith("INFO PROGRESS start job. job name=[batchlet-integration-test]"),
-                startsWith("INFO PROGRESS start step. step name=[step1]"),
-                startsWith("INFO PROGRESS finish step. step name=[step1], step status=[FAILED]"),
-                startsWith("INFO PROGRESS finish job. job name=[batchlet-integration-test], batch status=[FAILED]")));
+        Main.main("batchlet-integration-test");
     }
 
     /**
@@ -750,18 +767,23 @@ public class BatchIntegrationTest {
         // -------------------------------------------------- setup output table
         resource.clearBatchOutputTable();
 
+        exit.expectSystemExitWithStatus(0);
+        exit.checkAssertionAfterwards(new Assertion() {
+            @Override
+            public void checkAssertion() throws Exception {
+                // -------------------------------------------------- assert log
+                assertThat(InMemoryAppender.getLogMessages("PROGRESS"), contains(
+                        startsWith("INFO PROGRESS start job. job name=[multi-step-integration-with-job-listener-test]"),
+                        startsWith("INFO PROGRESS start step. step name=[batchlet]"),
+                        startsWith("INFO PROGRESS finish step. step name=[batchlet], step status=[SUCCEEDED]"),
+                        startsWith("INFO PROGRESS start step. step name=[chunk]"),
+                        startsWith("INFO PROGRESS chunk progress. write count=[10]"),
+                        startsWith("INFO PROGRESS finish step. step name=[chunk], step status=[SUCCEEDED]"),
+                        startsWith("INFO PROGRESS finish job. job name=[multi-step-integration-with-job-listener-test], batch status=[COMPLETED]")));
+            }
+        });
         // -------------------------------------------------- execute batch job
-        resource.startJob("multi-step-integration-with-job-listener-test");
-
-        // -------------------------------------------------- assert log
-        assertThat(InMemoryAppender.getLogMessages("PROGRESS"), contains(
-                startsWith("INFO PROGRESS start job. job name=[multi-step-integration-with-job-listener-test]"),
-                startsWith("INFO PROGRESS start step. step name=[batchlet]"),
-                startsWith("INFO PROGRESS finish step. step name=[batchlet], step status=[SUCCEEDED]"),
-                startsWith("INFO PROGRESS start step. step name=[chunk]"),
-                startsWith("INFO PROGRESS chunk progress. write count=[10]"),
-                startsWith("INFO PROGRESS finish step. step name=[chunk], step status=[SUCCEEDED]"),
-                startsWith("INFO PROGRESS finish job. job name=[multi-step-integration-with-job-listener-test], batch status=[COMPLETED]")));
+        Main.main("multi-step-integration-with-job-listener-test");
     }
 
     /**
@@ -810,18 +832,23 @@ public class BatchIntegrationTest {
         // -------------------------------------------------- clear output table
         resource.clearBatchOutputTable();
 
+        exit.expectSystemExitWithStatus(0);
+        exit.checkAssertionAfterwards(new Assertion() {
+            @Override
+            public void checkAssertion() throws Exception {
+                // -------------------------------------------------- assert log
+                assertThat(InMemoryAppender.getLogMessages("PROGRESS"), contains(
+                        startsWith("INFO PROGRESS start job. job name=[chunk-integration-test]"),
+                        startsWith("INFO PROGRESS start step. step name=[myStep]"),
+                        startsWith("INFO PROGRESS chunk progress. write count=[10]"),
+                        startsWith("INFO PROGRESS chunk progress. write count=[20]"),
+                        startsWith("INFO PROGRESS chunk progress. write count=[25]"),
+                        startsWith("INFO PROGRESS finish step. step name=[myStep], step status=[SUCCEEDED]"),
+                        startsWith("INFO PROGRESS finish job. job name=[chunk-integration-test], batch status=[COMPLETED]")));
+            }
+        });
         // -------------------------------------------------- execute batch job
-        resource.startJob("chunk-integration-test");
-
-        // -------------------------------------------------- assert log
-        assertThat(InMemoryAppender.getLogMessages("PROGRESS"), contains(
-                startsWith("INFO PROGRESS start job. job name=[chunk-integration-test]"),
-                startsWith("INFO PROGRESS start step. step name=[myStep]"),
-                startsWith("INFO PROGRESS chunk progress. write count=[10]"),
-                startsWith("INFO PROGRESS chunk progress. write count=[20]"),
-                startsWith("INFO PROGRESS chunk progress. write count=[25]"),
-                startsWith("INFO PROGRESS finish step. step name=[myStep], step status=[SUCCEEDED]"),
-                startsWith("INFO PROGRESS finish job. job name=[chunk-integration-test], batch status=[COMPLETED]")));
+        Main.main("chunk-integration-test");
     }
 
     /**
@@ -901,5 +928,22 @@ public class BatchIntegrationTest {
         // -------------------------------------------------- assert batch status
         assertThat(execution.getBatchStatus(), is(BatchStatus.FAILED));
     }
-}
+
+    /**
+     * MainでBuchletを実行時に、終了ステータスがWARNINGの場合に、戻り値2を返すこと。
+     */
+    @Test
+    public void testWarningBatchlet() throws Exception {
+        exit.expectSystemExitWithStatus(2);
+        Main.main("warning-batchlet-test");
+    }
+
+    /**
+     * MainでChunkを実行時に、終了ステータスがWARNINGの場合に、戻り値2を返すこと。
+     */
+    @Test
+    public void testWarningChunk() throws Exception {
+        exit.expectSystemExitWithStatus(2);
+        Main.main("warning-chunk-test");
+    }}
 
