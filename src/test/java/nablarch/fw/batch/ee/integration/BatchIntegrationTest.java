@@ -34,6 +34,7 @@ import nablarch.core.db.statement.SqlResultSet;
 import nablarch.core.db.statement.SqlRow;
 import nablarch.core.repository.ObjectLoader;
 import nablarch.core.repository.SystemRepository;
+import nablarch.fw.batch.ee.JobExecutor;
 import nablarch.fw.batch.ee.initializer.RepositoryInitializer;
 import nablarch.fw.batch.ee.integration.app.FileWriter;
 import nablarch.fw.batch.ee.integration.app.RegisterBatchOutputTable;
@@ -1156,6 +1157,102 @@ public class BatchIntegrationTest {
         assertThat(response.readEntity(String.class),
                 containsString("No active contexts for scope type nablarch.fw.batch.ee.cdi.StepScoped"));
     }
-    
+
+    /**
+     * MainでBuchletを実行時に、バッチステータスがCOMPLETEDの場合に、戻り値0を返すこと。
+     */
+    @Test
+    public void testJobExecutorSuccessBatchlet() throws Exception {
+        final JobExecutor executor = new JobExecutor("success-batchlet-test");
+        int exitCode = executor.execute();
+        assertThat(exitCode, is(0));
+        assertThat(executor.getJobExecution().getExitStatus(), not("WARNING"));
+        assertThat(executor.getJobExecution().getBatchStatus(), is(BatchStatus.COMPLETED));
+    }
+
+    /**
+     * MainでBuchletを実行時に、バッチステータスがCOMPLETEDの場合に、戻り値0を返すこと。
+     */
+    @Test
+    public void testJobExecutorSuccessChunk() throws Exception {
+        final JobExecutor executor = new JobExecutor("success-chunk-test");
+        int exitCode = executor.execute();
+        assertThat(exitCode, is(0));
+        assertThat(executor.getJobExecution().getExitStatus(), not("WARNING"));
+        assertThat(executor.getJobExecution().getBatchStatus(), is(BatchStatus.COMPLETED));
+    }
+
+    /**
+     * MainでBuchletを実行時に、終了ステータスがWARNINGの場合に、戻り値2を返すこと。
+     */
+    @Test
+    public void testJobExecutorWarningBatchlet() throws Exception {
+        final JobExecutor executor = new JobExecutor("warning-batchlet-test");
+        int exitCode = executor.execute();
+        assertThat(exitCode, is(2));
+        assertThat(executor.getJobExecution().getExitStatus(), is("WARNING"));
+        assertThat(executor.getJobExecution().getBatchStatus(), is(BatchStatus.COMPLETED));
+    }
+
+    /**
+     * MainでBuchletを実行時に、例外をスローしても終了ステータスがWARNINGの場合、戻り値2を返すこと。
+     */
+    @Test
+    public void testJobExecutorWarningBatchletThrowError() throws Exception {
+        final JobExecutor executor = new JobExecutor("warning-batchlet-throw-error-test");
+        int exitCode = executor.execute();
+        assertThat(exitCode, is(2));
+        assertThat(executor.getJobExecution().getExitStatus(), is("WARNING"));
+        assertThat(executor.getJobExecution().getBatchStatus(), is(BatchStatus.FAILED));
+    }
+
+    /**
+     * MainでChunkを実行時に、終了ステータスがWARNINGの場合に、戻り値2を返すこと。
+     */
+    @Test
+    public void testJobExecutorWarningChunk() throws Exception {
+        final JobExecutor executor = new JobExecutor("warning-chunk-test");
+        int exitCode = executor.execute();
+        assertThat(exitCode, is(2));
+        assertThat(executor.getJobExecution().getExitStatus(), is("WARNING"));
+        assertThat(executor.getJobExecution().getBatchStatus(), is(BatchStatus.COMPLETED));
+    }
+
+
+    /**
+     * MainでChunkを実行時に、例外をスローしても終了ステータスがWARNINGの場合、戻り値2を返すこと。
+     */
+    @Test
+    public void testJobExecutorWarningChunkThrowError() throws Exception {
+        final JobExecutor executor = new JobExecutor("warning-chunk-throw-error-test");
+        int exitCode = executor.execute();
+        assertThat(exitCode, is(2));
+        assertThat(executor.getJobExecution().getExitStatus(), is("WARNING"));
+        assertThat(executor.getJobExecution().getBatchStatus(), is(BatchStatus.FAILED));
+    }
+
+    /**
+     * MainでBuchletを実行時に、例外がスローされバッチステータスがFAILEDの場合、戻り値1を返すこと。
+     */
+    @Test
+    public void testJobExecutorFailureBatchletThrowError() throws Exception {
+        final JobExecutor executor = new JobExecutor("failure-batchlet-throw-error-test");
+        int exitCode = executor.execute();
+        assertThat(exitCode, is(1));
+        assertThat(executor.getJobExecution().getExitStatus(), not("WARNING"));
+        assertThat(executor.getJobExecution().getBatchStatus(), is(BatchStatus.FAILED));
+    }
+
+    /**
+     * MainでChunkを実行時に、例外がスローされバッチステータスがFAILEDの場合、戻り値1を返すこと。
+     */
+    @Test
+    public void testJobExecutorFailureChunkThrowError() throws Exception {
+        final JobExecutor executor = new JobExecutor("failure-chunk-throw-error-test");
+        int exitCode = executor.execute();
+        assertThat(exitCode, is(1));
+        assertThat(executor.getJobExecution().getExitStatus(), not("WARNING"));
+        assertThat(executor.getJobExecution().getBatchStatus(), is(BatchStatus.FAILED));
+    }
 }
 
