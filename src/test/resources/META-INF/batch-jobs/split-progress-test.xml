@@ -1,0 +1,35 @@
+<job id="split-progress-test" xmlns="http://xmlns.jcp.org/xml/ns/javaee" version="1.0">
+  <listeners>
+    <listener ref="nablarchJobListenerExecutor">
+      <properties>
+        <property name="diConfigFilePath" value="manual-test/jbatch.xml" />
+      </properties>
+    </listener>
+  </listeners>
+
+  <split id="split">
+    <flow id="flow1">
+      <step id="step1">
+        <listeners>
+          <listener ref="nablarchStepListenerExecutor" />
+          <listener ref="nablarchItemWriteListenerExecutor" />
+          <listener ref="progressLogListener" />
+        </listeners>
+        <chunk item-count="10">
+          <reader ref="progressReader" />
+          <writer ref="progressWriter" />
+        </chunk>
+      </step>
+    </flow>
+    <flow id="flow2">
+      <step id="step2">
+        <listeners>
+          <listener ref="nablarchStepListenerExecutor" />
+        </listeners>
+        <batchlet ref="progressBatchlet" />
+      </step>
+    </flow>
+  </split>
+
+
+</job>

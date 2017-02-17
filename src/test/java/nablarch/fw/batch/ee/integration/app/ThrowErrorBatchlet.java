@@ -33,6 +33,7 @@ public class ThrowErrorBatchlet extends AbstractBatchlet {
             statement.executeUpdate();
         }
 
+        stepContext.setExitStatus("FAILED");
         throw new StackOverflowError();
     }
 }

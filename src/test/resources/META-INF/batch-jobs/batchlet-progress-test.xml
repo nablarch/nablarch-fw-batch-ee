@@ -1,0 +1,16 @@
+<job id="batchlet-progress-test" xmlns="http://xmlns.jcp.org/xml/ns/javaee" version="1.0">
+  <listeners>
+    <listener ref="nablarchJobListenerExecutor">
+      <properties>
+        <property name="diConfigFilePath" value="manual-test/jbatch.xml" />
+      </properties>
+    </listener>
+  </listeners>
+
+  <step id="step">
+    <listeners>
+      <listener ref="nablarchStepListenerExecutor" />
+    </listeners>
+    <batchlet ref="progressBatchlet" />
+  </step>
+</job>

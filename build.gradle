@@ -1,5 +1,7 @@
+import javax.swing.JButton
+
 group = 'com.nablarch.framework'
-version = '1.0.2'
+version = '1.1.0'
 description = 'jBatch(JSR352)に準拠したバッチ処理方式を実現する'
 
 buildscript {
@@ -20,6 +22,7 @@ apply plugin: 'com.nablarch.dev.nablarch-version'
 apply plugin: 'cobertura'
 apply plugin: 'idea'
 apply plugin: 'eclipse'
+apply plugin: 'java'
 
 // ビルド時のJavaバージョンを指定する
 sourceCompatibility=JavaVersion.VERSION_1_6
@@ -27,6 +30,7 @@ targetCompatibility=JavaVersion.VERSION_1_6
 
 configurations {
   slf
+  jberet
 }
 
 dependencies {
@@ -65,6 +69,16 @@ dependencies {
   }
 
   slf 'org.slf4j:slf4j-api:1.7.5'
+
+  jberet 'org.jboss.spec.javax.batch:jboss-batch-api_1.0_spec:1.0.0.Final'
+  jberet 'org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec:1.0.1.Final'
+  jberet 'org.jberet:jberet-core:1.2.2.Final'
+  jberet 'org.jberet:jberet-se:1.2.0.Final'
+  jberet 'org.jboss.weld:weld-core:2.4.2.Final'
+  jberet 'org.jboss.weld.se:weld-se:2.4.2.Final'
+  jberet 'org.jboss.marshalling:jboss-marshalling:1.4.11.Final'
+  jberet 'org.jboss.logging:jboss-logging:3.3.0.Final'
+  jberet 'org.wildfly.security:wildfly-security-manager:1.1.2.Final'
 
 }
 
@@ -128,6 +142,44 @@ sonarRunner {
     property "sonar.java.coveragePlugin", "cobertura"
     property "sonar.cobertura.reportPath", "${coberturaReportDir}/coverage.xml"
   }
+}
+
+task runBatchlet(type: JavaExec, dependsOn: 'copyFile') {
+  classpath += configurations.jberet + getTestRuntimeClasspathWithoutGlassfish()
+  main = "org.jberet.se.Main"
+  args "batchlet-progress-test"
+}
+
+task runChunk(type: JavaExec, dependsOn: 'copyFile') {
+  classpath += configurations.jberet + getTestRuntimeClasspathWithoutGlassfish()
+  main = "org.jberet.se.Main"
+  args "chunk-progress-test"
+}
+
+task runSplit(type: JavaExec, dependsOn: 'copyFile') {
+  classpath += configurations.jberet + getTestRuntimeClasspathWithoutGlassfish()
+  main = "org.jberet.se.Main"
+  args "split-progress-test"
+}
+
+task copyFile(dependsOn: ['compileTestJava', 'processTestResources']) {
+  ['build/classes/main/META-INF/', 'build/classes/test/META-INF/'].each { path ->
+    doLast {
+      copy {
+        from 'build/resources/main/META-INF/beans.xml'
+        into path
+      }
+    }
+  }
+}
+
+[runBatchlet, runChunk, runSplit]*.group = 'progress'
+
+def getTestRuntimeClasspathWithoutGlassfish() {
+  def list = sourceSets.test.runtimeClasspath.grep {
+    !it.name.contains('glassfish')
+  }
+  return files(list)
 }
 
 tasks.sonarRunner {

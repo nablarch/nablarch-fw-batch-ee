@@ -23,6 +23,10 @@
   <logger name="PROGRESS" additivity="false">
     <appender-ref ref="PROGRESS" />
   </logger>
+  
+  <logger name="progress" additivity="false">
+    <appender-ref ref="PROGRESS" />
+  </logger>
 
   <root level="INFO">
     <appender-ref ref="ALL" />
