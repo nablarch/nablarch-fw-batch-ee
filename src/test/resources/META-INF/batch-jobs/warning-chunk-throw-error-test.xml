@@ -1,0 +1,13 @@
+<job id="warning-chunk-throw-error-test" xmlns="http://xmlns.jcp.org/xml/ns/javaee" version="1.0">
+  <step id="step1">
+    <chunk item-count="5">
+      <reader ref="systemOutItemReader"/>
+      <processor ref="systemOutItemProcessor"/>
+      <writer ref="systemOutItemWriterThrowError">
+        <properties>
+          <property name="isWarning" value="true"/>
+        </properties>
+      </writer>
+    </chunk>
+  </step>
+</job>
