@@ -34,7 +34,20 @@ public class ProcessedCountBasedProgressCalculatorTest {
 
         assertThat(progress, allOf(
                 hasProperty("tps", is(100.0D)),
-                hasProperty("estimatedEndTime", is(expectedEstimatedEndTime))
+                hasProperty("estimatedEndTime", is(expectedEstimatedEndTime)),
+                hasProperty("remainingCount", is(90L))
+        ));
+    }
+
+    @Test
+    public void 処理対数件数が1以上で処理済み件数が0の場合TPSは0で終了予測は不明となること() throws Exception {
+        final ProcessedCountBasedProgressCalculator sut = new ProcessedCountBasedProgressCalculator(1L);
+        final Progress progress = sut.calculate(0L);
+
+        assertThat(progress, allOf(
+                hasProperty("tps", is(0.0)),
+                hasProperty("estimatedEndTime", is(nullValue())),
+                hasProperty("remainingCount", is(1L))
         ));
     }
 }

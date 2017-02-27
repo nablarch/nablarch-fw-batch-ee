@@ -34,6 +34,9 @@ public class BasicProgressManager implements ProgressManager {
     /** 進捗状況をログに出力する機能 */
     private final ProgressPrinter progressPrinter = new ProgressLogPrinter();
 
+    /** 入力件数 */
+    private long inputCount;
+
     /** 進捗状況を求める機能 */
     private ProgressCalculator calculator;
 
@@ -51,6 +54,12 @@ public class BasicProgressManager implements ProgressManager {
 
     @Override
     public void setInputCount(final long inputCount) {
+        if (inputCount < 0L) {
+            throw new IllegalArgumentException("invalid input count. must set 0 or more. "
+                    + processName.formatProcessName() + " input count: [" + inputCount + ']');
+        }
+            
+        this.inputCount = inputCount;
         calculator = new ProcessedCountBasedProgressCalculator(inputCount);
         ProgressLogger.write(processName.formatProcessName() + " input count: [" + inputCount + ']');
     }
@@ -62,11 +71,27 @@ public class BasicProgressManager implements ProgressManager {
 
     @Override
     public void outputProgressInfo(final long processedCount) {
-        if (calculator == null) {
-            throw new IllegalStateException("input count is not set. must set input count. " + processName.formatProcessName());
+        verifyStatus(processedCount);
+        // 入力件数が0の場合は進捗を出力する必要が無いので何もしない。
+        if (inputCount == 0L) {
+            return;
         }
         final Progress progress = calculator.calculate(processedCount);
         progressPrinter.print(processName, progress);
+    }
+
+    /**
+     * 状態が正しいか検証する。
+     * @param processedCount 処理済み件数
+     */
+    private void verifyStatus(final long processedCount) {
+        if (calculator == null) {
+            throw new IllegalStateException("input count is not set. must set input count. " + processName.formatProcessName());
+        }
+        if (inputCount == 0L && processedCount != 0L) {
+            throw new IllegalArgumentException("invalid processed count. processed count must set 0 because input count is 0. "
+                    + processName.formatProcessName() + " input count: [" + inputCount + "] processed count: [" + processedCount + ']');
+        }
     }
 
     /**

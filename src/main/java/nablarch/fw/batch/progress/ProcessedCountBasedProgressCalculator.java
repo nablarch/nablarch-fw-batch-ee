@@ -39,6 +39,10 @@ public class ProcessedCountBasedProgressCalculator implements ProgressCalculator
      */
     @Override
     public Progress calculate(final long processedCount) {
+        // 処理済み件数がゼロの場合は終了予測不能
+        if (processedCount == 0L) {
+            return new Progress(0.0, null, inputCount);
+        }
         final double tps = tpsCalculator.calculate(startTime, processedCount);
         final Date estimatedEndTime = estimatedEndTimeCalculator.calculate(inputCount, processedCount, tps);
         return new Progress(tps, estimatedEndTime, inputCount - processedCount);
