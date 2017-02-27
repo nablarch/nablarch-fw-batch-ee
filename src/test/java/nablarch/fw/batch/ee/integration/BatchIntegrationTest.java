@@ -1,12 +1,8 @@
 package nablarch.fw.batch.ee.integration;
 
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.CoreMatchers.startsWith;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
@@ -24,12 +20,23 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.LogManager;
+
 import javax.batch.runtime.BatchStatus;
 import javax.batch.runtime.JobExecution;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Response;
 
-import mockit.Deencapsulation;
+import org.hamcrest.Matchers;
+import org.jboss.arquillian.container.test.api.Deployment;
+import org.jboss.arquillian.container.test.api.RunAsClient;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.test.api.ArquillianResource;
+import org.jboss.shrinkwrap.api.ArchivePath;
+import org.jboss.shrinkwrap.api.Filter;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.slf4j.bridge.SLF4JBridgeHandler;
+
 import nablarch.core.db.statement.SqlResultSet;
 import nablarch.core.db.statement.SqlRow;
 import nablarch.core.repository.ObjectLoader;
@@ -40,14 +47,6 @@ import nablarch.fw.batch.ee.integration.app.FileWriter;
 import nablarch.fw.batch.ee.integration.app.RegisterBatchOutputTable;
 import nablarch.fw.batch.ee.integration.app.ThrowErrorWriter;
 
-import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.container.test.api.RunAsClient;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.arquillian.test.api.ArquillianResource;
-import org.jboss.shrinkwrap.api.ArchivePath;
-import org.jboss.shrinkwrap.api.Filter;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -55,7 +54,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
-import org.slf4j.bridge.SLF4JBridgeHandler;
+
+import mockit.Deencapsulation;
 
 /**
  * Java Batchの結合テスト。
@@ -1053,7 +1053,7 @@ public class BatchIntegrationTest {
                         not(containsString("FileNotFoundException")))));
 
         assertThat("運用者向けのメッセージと合わせてスタックトレースも出力されていること",
-                InMemoryAppender.getLogMessages("ALL"), hasItem(allOf(
+                InMemoryAppender.getLogMessages("ALL"), Matchers.<String>hasItem(allOf(
                         startsWith("ERROR operator ファイルの読み込みに失敗しました。ファイルが存在するか確認してください。"),
                         containsString("FileNotFoundException"))));
 
@@ -1080,7 +1080,7 @@ public class BatchIntegrationTest {
                         not(containsString("IllegalStateException")))));
 
         assertThat("運用者向けのメッセージと合わせてスタックトレースも出力されていること",
-                InMemoryAppender.getLogMessages("ALL"), hasItem(allOf(
+                InMemoryAppender.getLogMessages("ALL"), Matchers.<String>hasItem(allOf(
                         startsWith("ERROR operator ファイルの書き込みに失敗しました。他のプロセスによってファイルがロックされていないか確認してください。"),
                         containsString("IllegalStateException"))));
 
@@ -1106,7 +1106,7 @@ public class BatchIntegrationTest {
 
         assertThat("スタックトレースが出力されていること",
                 InMemoryAppender.getLogMessages("ALL"),
-                hasItem(containsString("StackOverflowError")));
+                Matchers.<String>hasItem(containsString("StackOverflowError")));
 
         // -------------------------------------------------- assert batch status
         assertThat(execution.getBatchStatus(), is(BatchStatus.FAILED));
@@ -1136,7 +1136,7 @@ public class BatchIntegrationTest {
         assertThat(execution.getBatchStatus(), is(BatchStatus.FAILED));
 
         // -------------------------------------------------- assert log
-        assertThat(InMemoryAppender.getLogMessages("ALL"), hasItem(allOf(
+        assertThat(InMemoryAppender.getLogMessages("ALL"), Matchers.<String>hasItem(allOf(
                 containsString("javax.batch.operations.BatchRuntimeException"),
                 containsString("TransientUserData of StepContext must be StepScopedHolder type."))));
 
