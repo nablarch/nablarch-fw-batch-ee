@@ -12,6 +12,7 @@ import nablarch.fw.batch.ee.initializer.LogInitializer;
 import nablarch.fw.batch.ee.integration.InMemoryAppender;
 import nablarch.fw.batch.ee.listener.NablarchListenerContext;
 
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -30,8 +31,13 @@ public class ChunkProgressLogListenerTest {
     StepContext mockStepContext;
 
     @BeforeClass
-    public static void setUp() throws Exception {
+    public static void setUpClass() throws Exception {
         LogInitializer.initialize();
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        InMemoryAppender.clear();
     }
 
     /**
