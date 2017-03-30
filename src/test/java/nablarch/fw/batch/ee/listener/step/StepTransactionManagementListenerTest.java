@@ -1,10 +1,9 @@
 package nablarch.fw.batch.ee.listener.step;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.sameInstance;
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
-import static org.junit.matchers.JUnitMatchers.containsString;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -17,8 +16,8 @@ import nablarch.core.repository.SystemRepository;
 import nablarch.core.transaction.Transaction;
 import nablarch.core.transaction.TransactionContext;
 import nablarch.core.transaction.TransactionFactory;
-
 import nablarch.fw.batch.ee.listener.NablarchListenerContext;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
