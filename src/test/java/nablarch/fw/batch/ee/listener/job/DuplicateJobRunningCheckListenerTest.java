@@ -1,8 +1,8 @@
 package nablarch.fw.batch.ee.listener.job;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
-import static org.junit.matchers.JUnitMatchers.containsString;
 
 import javax.batch.operations.BatchRuntimeException;
 import javax.batch.runtime.context.JobContext;
