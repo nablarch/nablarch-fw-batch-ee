@@ -157,13 +157,24 @@ public class NablarchListenerExecutor<T> {
     /**
      * 実行すべきリスナーのリストを{@link SystemRepository}から取得する。
      * <p/>
-     * {@link SystemRepository}にジョブ毎のリスナーが定義されている場合にはそのリストを返す。
-     * 定義されていない場合には、デフォルト設定のリスナーを返す。
-     * デフォルト設定も存在しない場合には、空のリストを返す。
+     * {@link SystemRepository}に登録されているリスナーを以下の順で探索し、合致したリスナーのリストを返す。
+     * <ol>
+     *     <li>ジョブのステップ毎のリスナー</li>
+     *     <li>ジョブ毎のリスナー</li>
+     *     <li>デフォルト設定のリスナー</li>
+     * </ol>
+     * デフォルト設定が存在しない場合には、空のリストを返す。
      *
      * @return リスナーのリスト
      */
     private List<T> lookupNablarchListenerList() {
+        if (stepContext != null) {
+            final List<T> customStepListeners = SystemRepository.get(
+                    jobContext.getJobName() + '.' + stepContext.getStepName() + '.' + listenerListName);
+            if (customStepListeners != null) {
+                return customStepListeners;
+            }
+        }
         final List<T> customListeners = SystemRepository.get(
                 jobContext.getJobName() + '.' + listenerListName);
         if (customListeners != null) {

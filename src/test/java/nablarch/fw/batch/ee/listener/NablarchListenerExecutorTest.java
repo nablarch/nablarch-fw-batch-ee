@@ -638,4 +638,54 @@ public class NablarchListenerExecutorTest {
                 containsString("failed to execute listener. job=[testJob], step=[testStep]"),
                 containsString("failed to execute listener. job=[testJob], step=[testStep]")));
     }
+
+    /**
+     * {@link NablarchListenerExecutor#executeBefore(NablarchListenerExecutor.Runner)}のテストケース
+     * <br>
+     * リポジトリに個別に登録されているリスナーリストの順番でリスナーが順次実行されていくこと。
+     */
+    @Test
+    public void testExecuteBefore_customStep() {
+        sut = new NablarchListenerExecutor<String>("testListeners", jobContext, stepContext);
+        SystemRepository.load(new ObjectLoader() {
+            @Override
+            public Map<String, Object> load() {
+                List<String> defaultListeners = new ArrayList<String>();
+                defaultListeners.add("testListener1");
+                defaultListeners.add("testListener2");
+
+                List<String> customListeners = new ArrayList<String>();
+                customListeners.add("testListener3");
+                customListeners.add("testListener4");
+
+                List<String> customStepListeners = new ArrayList<String>();
+                customStepListeners.add("testStep1");
+                customStepListeners.add("testStep2");
+
+                Map<String, Object> objects = new HashMap<String, Object>();
+                objects.put("testJob.testStep.testListeners", customStepListeners);
+                objects.put("testJob.testListeners", customListeners);
+                objects.put("testListeners", defaultListeners);
+                return objects;
+            }
+        });
+
+        sut.executeBefore(new Runner<String>() {
+            @Override
+            public void run(String listener, NablarchListenerContext context) {
+                listenerList.add("before:" + listener);
+            }
+        });
+
+        // デフォルトで定義されたリスナーリストが設定された順番に実行されること
+        assertThat(listenerList.size(), is(2));
+        assertThat(listenerList.get(0), is("before:testStep1"));
+        assertThat(listenerList.get(1), is("before:testStep2"));
+
+        // スタックに積まれていること
+        LinkedList<String> stack = Deencapsulation.getField(sut, "executedListenerStack");
+        assertThat(stack.size(), is(2));
+        assertThat(stack.pop(), is("testStep2"));
+        assertThat(stack.pop(), is("testStep1"));
+    }
 }
