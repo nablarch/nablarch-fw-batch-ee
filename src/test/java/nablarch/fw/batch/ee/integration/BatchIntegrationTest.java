@@ -1256,96 +1256,6 @@ public class BatchIntegrationTest {
     }
 
     /**
-     * ステップ単位で指定したトランザクション制御の後続リスナーの事前処理で例外が発生した場合、トランザクションはロールバックされること。
-     * <p>
-     * <ul>
-     * <li>バッチジョブは異常終了すること</li>
-     * <li>ロールバックされるのでテーブルはからのまま</li>
-     * </ul>
-     */
-    @Test
-    public void executeBatch_StepListenerErrorOnBeforeStepWithStepLevelListener() throws Exception {
-        // -------------------------------------------------- clear output table
-        resource.clearBatchOutputTable();
-
-        // -------------------------------------------------- assert execute batchlet?
-        final JobExecution execution = resource.startJob("specified-steplevel-listener-error-on-before-step-test");
-        assertThat("異常終了していること", execution.getBatchStatus(), is(BatchStatus.FAILED));
-
-        // -------------------------------------------------- assert output table
-        assertThat("レコードは登録されていないこと", resource.findBatchOutputTable()
-                .isEmpty(), is(true));
-    }
-
-    /**
-     * ステップ単位で指定したトランザクション制御の後続リスナーの事後処理で例外が発生した場合、トランザクションはロールバックされること。
-     * <p>
-     * <ul>
-     * <li>バッチジョブは異常終了すること</li>
-     * <li>ロールバックされるのでテーブルはからのまま</li>
-     * </ul>
-     */
-    @Test
-    public void executeBatch_StepListenerErrorOnAfterStepWithStepLevelListener() throws Exception {
-        // -------------------------------------------------- clear output table
-        resource.clearBatchOutputTable();
-
-        // -------------------------------------------------- assert execute batchlet?
-        final JobExecution execution = resource.startJob("specified-steplevel-listener-error-on-after-step-test");
-        assertThat("異常終了していること", execution.getBatchStatus(), is(BatchStatus.FAILED));
-
-        // -------------------------------------------------- assert output table
-        assertThat("レコードは登録されていないこと", resource.findBatchOutputTable()
-                .isEmpty(), is(true));
-    }
-
-    /**
-     * ステップ単位で指定したトランザクション制御の後続リスナーの事前処理で例外が発生した場合、トランザクションはロールバックされること。
-     * <p>
-     * <ul>
-     * <li>バッチジョブは異常終了すること</li>
-     * <li>ロールバックされるのでテーブルはからのまま</li>
-     * </ul>
-     */
-    @Test
-    public void executeChunk_ItemWriteListenerErrorOnBeforeWriteWithStepLevelListener() throws Exception {
-        // -------------------------------------------------- clear output table
-        resource.clearBatchOutputTable();
-
-        // -------------------------------------------------- execute batch job
-        final JobExecution execution = resource.startJob("specified-steplevel-item-write-listener-error-on-before-write-test");
-        assertThat("異常終了していること", execution.getBatchStatus(), is(BatchStatus.FAILED));
-
-        // -------------------------------------------------- assert output table
-        final SqlResultSet rs = resource.findBatchOutputTable();
-        assertThat("レコードは登録されていないこと", resource.findBatchOutputTable()
-                .isEmpty(), is(true));
-    }
-
-    /**
-     * ステップ単位で指定したトランザクション制御の後続リスナーの事後処理で例外が発生した場合、トランザクションはロールバックされること。
-     * <p>
-     * <ul>
-     * <li>バッチジョブは異常終了すること</li>
-     * <li>ロールバックされるのでテーブルはからのまま</li>
-     * </ul>
-     */
-    @Test
-    public void executeChunk_ItemWriteListenerErrorOnAfterWriteWithStepLevelListener() throws Exception {
-        // -------------------------------------------------- clear output table
-        resource.clearBatchOutputTable();
-
-        // -------------------------------------------------- execute batch job
-        final JobExecution execution = resource.startJob("specified-steplevel-item-write-listener-error-on-after-write-test");
-        assertThat("異常終了していること", execution.getBatchStatus(), is(BatchStatus.FAILED));
-
-        // -------------------------------------------------- assert output table
-        final SqlResultSet rs = resource.findBatchOutputTable();
-        assertThat("レコードは登録されていないこと", resource.findBatchOutputTable()
-                .isEmpty(), is(true));
-    }
-
-    /**
      * ChunkステップをもつバッチJOB、ステップ単位で指定したリスナーを実行し正常に処理が完了すること。
      * <p/>
      * <ul>
@@ -1359,7 +1269,7 @@ public class BatchIntegrationTest {
         resource.clearBatchOutputTable();
 
         // -------------------------------------------------- execute batch job
-        final JobExecution execution = resource.startJob("specified-steplevel-chunk-integration-test");
+        final JobExecution execution = resource.startJob("specified-steplevel-integration-test");
         assertThat("バッチ処理が正常に終わっていること", execution.getBatchStatus(), is(BatchStatus.COMPLETED));
 
         // -------------------------------------------------- assert batch output table
@@ -1375,30 +1285,34 @@ public class BatchIntegrationTest {
 
         List<String> messages = InMemoryAppender.getLogMessages("PROGRESS");
         assertThat(messages, contains(
-                startsWith("INFO progress start job. job name: [specified-steplevel-chunk-integration-test]"),
-                startsWith("INFO progress start step. job name: [specified-steplevel-chunk-integration-test] step name: [myStep]"),
-                startsWith("INFO progress job name: [specified-steplevel-chunk-integration-test] step name: [myStep] input count: [25]"),
+                startsWith("INFO progress start job. job name: [specified-steplevel-integration-test]"),
+                startsWith("INFO progress start step. job name: [specified-steplevel-integration-test] step name: [myStep]"),
+                startsWith("INFO progress job name: [specified-steplevel-integration-test] step name: [myStep] input count: [25]"),
                 startsWith("INFO progress chunk progress. write count=[10]"),
                 allOf(
-                        startsWith("INFO progress job name: [specified-steplevel-chunk-integration-test] step name: [myStep] tps:"),
+                        startsWith("INFO progress job name: [specified-steplevel-integration-test] step name: [myStep] tps:"),
                         containsString("estimated end time:"),
                         containsString("remaining count: [15]")
                 ),
                 startsWith("INFO progress chunk progress. write count=[20]"),
                 allOf(
-                        startsWith("INFO progress job name: [specified-steplevel-chunk-integration-test] step name: [myStep] tps:"),
+                        startsWith("INFO progress job name: [specified-steplevel-integration-test] step name: [myStep] tps:"),
                         containsString("estimated end time:"),
                         containsString("remaining count: [5]")
                 ),
                 startsWith("INFO progress chunk progress. write count=[25]"),
                 allOf(
-                        startsWith("INFO progress job name: [specified-steplevel-chunk-integration-test] step name: [myStep] tps:"),
+                        startsWith("INFO progress job name: [specified-steplevel-integration-test] step name: [myStep] tps:"),
                         containsString("estimated end time:"),
                         containsString("remaining count: [0]")
                 ),
-                startsWith("INFO progress finish step. job name: [specified-steplevel-chunk-integration-test] step name: [myStep] step status: [null]"),
-                startsWith("INFO progress finish job. job name: [specified-steplevel-chunk-integration-test]")
+                startsWith("INFO progress finish step. job name: [specified-steplevel-integration-test] step name: [myStep] step status: [null]"),
+                startsWith("INFO progress finish job. job name: [specified-steplevel-integration-test]")
         ));
+        assertThat(messages, not(contains(
+                startsWith("INFO progress start step. job name: [specified-steplevel-integration-test] step name: [myStepWithoutProgressLog]"),
+                startsWith("INFO progress finish step. job name: [specified-steplevel-integration-test] step name: [myStepWithoutProgressLog] step status: [null]")
+        )));
     }
 }
 

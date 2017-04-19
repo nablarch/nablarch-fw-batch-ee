@@ -1,4 +1,4 @@
-<job id="specified-steplevel-chunk-integration-test" xmlns="http://xmlns.jcp.org/xml/ns/javaee" version="1.0">
+<job id="specified-steplevel-integration-test" xmlns="http://xmlns.jcp.org/xml/ns/javaee" version="1.0">
   <listeners>
     <listener ref="nablarchJobListenerExecutor">
       <properties>
@@ -7,7 +7,7 @@
     </listener>
   </listeners>
 
-  <step id="myStep">
+  <step id="myStep" next="myStepWithoutProgressLog">
     <listeners>
       <listener ref="nablarchStepListenerExecutor" />
       <listener ref="nablarchItemWriteListenerExecutor" />
@@ -23,5 +23,19 @@
       <processor ref="createEntityProcessor" />
       <writer ref="batchOutputWriter" />
     </chunk>
+  </step>
+
+  <step id="myStepWithoutProgressLog">
+    <listeners>
+      <listener ref="nablarchStepListenerExecutor" />
+      <listener ref="nablarchItemWriteListenerExecutor" />
+      <listener ref="progressLogListener" />
+    </listeners>
+
+    <batchlet ref="systemOutBatchlet">
+      <properties>
+        <property name="isWarning" value="false"/>
+      </properties>
+    </batchlet>
   </step>
 </job>
