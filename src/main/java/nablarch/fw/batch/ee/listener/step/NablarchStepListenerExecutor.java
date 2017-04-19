@@ -17,6 +17,7 @@ import javax.inject.Named;
  * 本クラスでは、{@link SystemRepository}から実行対象のリスナー({@link NablarchStepListener})のリストを取得する。
  * {@link SystemRepository}からリスナーリストを取得する方法は以下のとおり。
  * <ol>
+ * <li>ジョブ名称 + ステップ名 + ".stepListeners"でリスナーリストが登録されている場合、そのリストを使用する。</li>
  * <li>ジョブ名称 + ".stepListeners"でリスナーリストが登録されている場合、そのリストを使用する。</li>
  * <li>stepListenersでリスナーリストが登録されている場合、そのリストを使用する。</li>
  * <li>上記に該当しない場合、このリスナーは何もしない。</li>
