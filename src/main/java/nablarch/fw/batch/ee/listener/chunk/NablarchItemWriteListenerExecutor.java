@@ -19,6 +19,7 @@ import java.util.List;
  * 本クラスでは、{@link SystemRepository}から実行対象のリスナー({@link NablarchItemWriteListener})のリストを取得する。
  * {@link SystemRepository}からリスナーリストを取得する方法は以下のとおり。
  * <ol>
+ * <li>ジョブ名称 + ステップ名 + ".itemWriteListeners"でリスナーリストが登録されている場合、そのリストを使用する。</li>
  * <li>ジョブ名称 + ".itemWriteListeners"でリスナーリストが登録されている場合、そのリストを使用する。</li>
  * <li>itemWriteListenersでリスナーリストが登録されている場合、そのリストを使用する。</li>
  * <li>上記に該当しない場合、このリスナーは何もしない。</li>

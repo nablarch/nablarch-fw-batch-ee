@@ -1254,5 +1254,29 @@ public class BatchIntegrationTest {
         assertThat(executor.getJobExecution().getExitStatus(), not("WARNING"));
         assertThat(executor.getJobExecution().getBatchStatus(), is(BatchStatus.FAILED));
     }
+
+    /**
+     * ステップ単位でリスナーを設定できること。
+     */
+    @Test
+    public void executeStepLevelListener() throws Exception {
+        final JobExecution execution = resource.startJob("specified-steplevel-listener-test");
+
+        assertThat("LoggingStepLevelListenerの実行結果がログ出力されていること",
+                InMemoryAppender.getLogMessages("ALL"), Matchers.<String>hasItem(allOf(
+                        containsString("LoggingStepLevelListener is executed on step1"))));
+    }
+
+    /**
+     * ジョブ単位でリスナーを設定できること。
+     */
+    @Test
+    public void executeJobLevelListener() throws Exception {
+        final JobExecution execution = resource.startJob("specified-joblevel-listener-test");
+
+        assertThat("LoggingStepLevelListenerの実行結果がログ出力されていること",
+                InMemoryAppender.getLogMessages("ALL"), Matchers.<String>hasItem(allOf(
+                        containsString("LoggingStepLevelListener is executed on step2"))));
+    }
 }
 

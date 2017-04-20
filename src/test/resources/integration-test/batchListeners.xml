@@ -82,4 +82,21 @@
     <component class="nablarch.fw.batch.ee.integration.app.ThrowErrorAfterWriteListener" />
   </list>
 
+  <!-- ダミーのstepListener (ジョブ設定より粒度の小さいステップ毎の設定(step1)があるのでそちらの方が使われる) -->
+  <list name="specified-steplevel-listener-test.stepListeners">
+    <component class="nablarch.fw.batch.ee.integration.app.DummyStepLevelListener" />
+  </list>
+
+  <list name="specified-steplevel-listener-test.step1.stepListeners">
+    <component class="nablarch.fw.batch.ee.integration.app.LoggingStepLevelListener" />
+  </list>
+
+  <!-- ダミーのstepListener (共通設定より粒度の小さいジョブ設定があるのでそちらの方が使われる) -->
+  <list name="specified-joblevel-listener-test">
+    <component class="nablarch.fw.batch.ee.integration.app.DummyStepLevelListener" />
+  </list>
+  <list name="specified-joblevel-listener-test.stepListeners">
+    <component class="nablarch.fw.batch.ee.integration.app.LoggingStepLevelListener" />
+  </list>
+
 </component-configuration>
