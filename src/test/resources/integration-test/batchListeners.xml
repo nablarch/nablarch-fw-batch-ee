@@ -82,23 +82,21 @@
     <component class="nablarch.fw.batch.ee.integration.app.ThrowErrorAfterWriteListener" />
   </list>
 
-  <!-- ダミーのジョブ設定 (ジョブ設定より粒度の小さいステップ毎の設定(myStep)があるのでそちらの方が使われる) -->
-  <list name="specified-steplevel-integration-test.stepListeners" />
-  <list name="specified-steplevel-chunk-integration-test.itemWriteListeners" />
-
-  <list name="specified-steplevel-integration-test.myStep.stepListeners">
-    <component class="nablarch.fw.batch.ee.listener.step.StepProgressLogListener" />
-    <component class="nablarch.fw.batch.ee.listener.step.DbConnectionManagementListener">
-      <property name="dbConnectionManagementHandler">
-        <component class="nablarch.common.handler.DbConnectionManagementHandler" />
-      </property>
-    </component>
-    <component class="nablarch.fw.batch.ee.listener.step.StepTransactionManagementListener" />
+  <!-- ダミーのstepListener (ジョブ設定より粒度の小さいステップ毎の設定(step1)があるのでそちらの方が使われる) -->
+  <list name="specified-steplevel-listener-test.stepListeners">
+    <component class="nablarch.fw.batch.ee.integration.app.DummyStepLevelListener" />
   </list>
 
-  <list name="specified-steplevel-integration-test.myStep.itemWriteListeners">
-    <component class="nablarch.fw.batch.ee.listener.chunk.ChunkProgressLogListener" />
-    <component class="nablarch.fw.batch.ee.listener.chunk.ItemWriteTransactionManagementListener" />
+  <list name="specified-steplevel-listener-test.step1.stepListeners">
+    <component class="nablarch.fw.batch.ee.integration.app.LoggingStepLevelListener" />
+  </list>
+
+  <!-- ダミーのstepListener (共通設定より粒度の小さいジョブ設定があるのでそちらの方が使われる) -->
+  <list name="specified-joblevel-listener-test">
+    <component class="nablarch.fw.batch.ee.integration.app.DummyStepLevelListener" />
+  </list>
+  <list name="specified-joblevel-listener-test.stepListeners">
+    <component class="nablarch.fw.batch.ee.integration.app.LoggingStepLevelListener" />
   </list>
 
 </component-configuration>

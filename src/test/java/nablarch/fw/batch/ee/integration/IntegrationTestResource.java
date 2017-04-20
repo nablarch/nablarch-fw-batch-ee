@@ -106,7 +106,10 @@ public class IntegrationTestResource extends ExternalResource {
         insert.setString(1, "step-scoped-integration-test");
         insert.setString(2, "0");
         insert.addBatch();
-        insert.setString(1, "specified-steplevel-integration-test");
+        insert.setString(1, "specified-steplevel-listener-test");
+        insert.setString(2, "0");
+        insert.addBatch();
+        insert.setString(1, "specified-joblevel-listener-test");
         insert.setString(2, "0");
         insert.addBatch();
         insert.executeBatch();

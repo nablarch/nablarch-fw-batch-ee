@@ -1256,63 +1256,27 @@ public class BatchIntegrationTest {
     }
 
     /**
-     * ChunkステップをもつバッチJOB、ステップ単位で指定したリスナーを実行し正常に処理が完了すること。
-     * <p/>
-     * <ul>
-     * <li>バッチJOBは正常終了していること</li>
-     * <li>アウトプットテーブルにレコードが登録されていること</li>
-     * </ul>
+     * ステップ単位でリスナーを設定できること。
      */
     @Test
-    public void executeChunk_SuccessWithStepLevelListener() throws Exception {
-        // -------------------------------------------------- clear output table
-        resource.clearBatchOutputTable();
+    public void executeStepLevelListener() throws Exception {
+        final JobExecution execution = resource.startJob("specified-steplevel-listener-test");
 
-        // -------------------------------------------------- execute batch job
-        final JobExecution execution = resource.startJob("specified-steplevel-integration-test");
-        assertThat("バッチ処理が正常に終わっていること", execution.getBatchStatus(), is(BatchStatus.COMPLETED));
+        assertThat("LoggingStepLevelListenerの実行結果がログ出力されていること",
+                InMemoryAppender.getLogMessages("ALL"), Matchers.<String>hasItem(allOf(
+                        containsString("LoggingStepLevelListener is executed on step1"))));
+    }
 
-        // -------------------------------------------------- assert batch output table
-        final SqlResultSet rs = resource.findBatchOutputTable();
-        assertThat("25レコード登録されていること", rs.size(), is(25));
+    /**
+     * ジョブ単位でリスナーを設定できること。
+     */
+    @Test
+    public void executeJobLevelListener() throws Exception {
+        final JobExecution execution = resource.startJob("specified-joblevel-listener-test");
 
-        for (int i = 0; i < 25; i++) {
-            int index = i + 1;
-            final SqlRow row = rs.get(i);
-            assertThat(row.getInteger("id"), is(index));
-            assertThat(row.getString("name"), is("name_" + index));
-        }
-
-        List<String> messages = InMemoryAppender.getLogMessages("PROGRESS");
-        assertThat(messages, contains(
-                startsWith("INFO progress start job. job name: [specified-steplevel-integration-test]"),
-                startsWith("INFO progress start step. job name: [specified-steplevel-integration-test] step name: [myStep]"),
-                startsWith("INFO progress job name: [specified-steplevel-integration-test] step name: [myStep] input count: [25]"),
-                startsWith("INFO progress chunk progress. write count=[10]"),
-                allOf(
-                        startsWith("INFO progress job name: [specified-steplevel-integration-test] step name: [myStep] tps:"),
-                        containsString("estimated end time:"),
-                        containsString("remaining count: [15]")
-                ),
-                startsWith("INFO progress chunk progress. write count=[20]"),
-                allOf(
-                        startsWith("INFO progress job name: [specified-steplevel-integration-test] step name: [myStep] tps:"),
-                        containsString("estimated end time:"),
-                        containsString("remaining count: [5]")
-                ),
-                startsWith("INFO progress chunk progress. write count=[25]"),
-                allOf(
-                        startsWith("INFO progress job name: [specified-steplevel-integration-test] step name: [myStep] tps:"),
-                        containsString("estimated end time:"),
-                        containsString("remaining count: [0]")
-                ),
-                startsWith("INFO progress finish step. job name: [specified-steplevel-integration-test] step name: [myStep] step status: [null]"),
-                startsWith("INFO progress finish job. job name: [specified-steplevel-integration-test]")
-        ));
-        assertThat(messages, not(contains(
-                startsWith("INFO progress start step. job name: [specified-steplevel-integration-test] step name: [myStepWithoutProgressLog]"),
-                startsWith("INFO progress finish step. job name: [specified-steplevel-integration-test] step name: [myStepWithoutProgressLog] step status: [null]")
-        )));
+        assertThat("LoggingStepLevelListenerの実行結果がログ出力されていること",
+                InMemoryAppender.getLogMessages("ALL"), Matchers.<String>hasItem(allOf(
+                        containsString("LoggingStepLevelListener is executed on step2"))));
     }
 }
 
