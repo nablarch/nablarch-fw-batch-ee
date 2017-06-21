@@ -1,0 +1,1 @@
+nablarch.fw.batch.ee.chunk.BaseDatabaseItemReaderTest$TestEntity
