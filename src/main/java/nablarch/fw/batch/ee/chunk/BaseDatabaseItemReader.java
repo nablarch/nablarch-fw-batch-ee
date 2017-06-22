@@ -10,6 +10,7 @@ import nablarch.core.db.connection.DbConnectionContext;
 import nablarch.core.db.connection.TransactionManagerConnection;
 import nablarch.core.repository.SystemRepository;
 import nablarch.core.transaction.TransactionContext;
+import nablarch.core.util.annotation.Published;
 
 /**
  * データベースを入力とする{@link javax.batch.api.chunk.ItemReader}の抽象クラス。
@@ -20,6 +21,7 @@ import nablarch.core.transaction.TransactionContext;
  *
  * @author Naoki Yamamoto
  */
+@Published
 public abstract class BaseDatabaseItemReader extends AbstractItemReader {
 
     /** リーダ専用のコネクション */
@@ -54,9 +56,13 @@ public abstract class BaseDatabaseItemReader extends AbstractItemReader {
     }
 
     @Override
-    public void close() throws Exception {
-        if (connection != null) {
-            connection.terminate();
+    public final void close() throws Exception {
+        try {
+            doClose();
+        } finally {
+            if (connection != null) {
+                connection.terminate();
+            }
         }
     }
 
@@ -66,4 +72,12 @@ public abstract class BaseDatabaseItemReader extends AbstractItemReader {
      * @throws Exception 発生した例外
      */
     protected abstract void doOpen(final Serializable checkpoint) throws Exception;
+    
+    /**
+     * リーダの終了処理（リソースの解放など）を行う。
+     * @throws Exception 発生した例外
+     */
+    protected void doClose() throws Exception {
+        // nop
+    }
 }
