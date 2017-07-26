@@ -30,7 +30,7 @@ public class ProgressLogPrinterTest {
     @Test
     public void 進捗状況がログに出力できること() throws Exception {
         final Date estimatedEndTime = new Date();
-        final Progress progress = new Progress(2.345, estimatedEndTime, 100);
+        final Progress progress = new Progress(2.345, 6.789, estimatedEndTime, 100);
         sut.print(new JBatchProcessName("test-job", "test-step"), progress);
 
         final List<String> messages = InMemoryAppender.getLogMessages("PROGRESS");
@@ -39,19 +39,19 @@ public class ProgressLogPrinterTest {
         }
         final String message = messages.get(0);
         assertThat(message,
-                containsString("job name: [test-job] step name: [test-step] tps: [2.35] estimated end time: ["
-                        + new SimpleDateFormat("yyyy/MM/dd hh:mm:ss.SSS").format(estimatedEndTime) + "]"
+                containsString("job name: [test-job] step name: [test-step] total tps: [2.35] current tps: [6.79] estimated end time: ["
+                        + new SimpleDateFormat("yyyy/MM/dd hh:mm:ss.SSS").format(estimatedEndTime) + ']'
                         + " remaining count: [100]"));
     }
 
     @Test
     public void 終了予測時間が不明な場合はunknownで出力されること() throws Exception {
-        final Progress progress = new Progress(0, null, 100);
+        final Progress progress = new Progress(0, 0, null, 100);
         sut.print(new JBatchProcessName("test-job", "test-step"), progress);
 
         final List<String> messages = InMemoryAppender.getLogMessages("PROGRESS");
         assertThat(messages, contains(
-                containsString("job name: [test-job] step name: [test-step] tps: [0.00]" 
+                containsString("job name: [test-job] step name: [test-step] total tps: [0.00] current tps: [0.00]"
                         + " estimated end time: [unknown] remaining count: [100]"))
         );
     }

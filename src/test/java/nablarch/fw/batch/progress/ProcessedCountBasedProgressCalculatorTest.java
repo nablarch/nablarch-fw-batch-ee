@@ -23,19 +23,30 @@ public class ProcessedCountBasedProgressCalculatorTest {
 
         final Date expectedEstimatedEndTime = new Date(System.currentTimeMillis() + 1234L);
         new Expectations() {{
-            mockTpsCalculator.calculate(anyLong, 10);
-            result = 100.0D;
+            mockTpsCalculator.calculate(anyLong, anyLong);
+            returns(100.0D, 200.0D, 300.0D);
             mockEstimatedEndTimeCalculator.calculate(100L, 10L, 100);
+            result = expectedEstimatedEndTime;
+            mockEstimatedEndTimeCalculator.calculate(100L, 20L, 200);
             result = expectedEstimatedEndTime;
         }};
 
         final ProcessedCountBasedProgressCalculator sut = new ProcessedCountBasedProgressCalculator(100L);
-        final Progress progress = sut.calculate(10);
+        Progress progress = sut.calculate(10);
 
         assertThat(progress, allOf(
                 hasProperty("tps", is(100.0D)),
+                hasProperty("currentTps", is(100.0D)),
                 hasProperty("estimatedEndTime", is(expectedEstimatedEndTime)),
                 hasProperty("remainingCount", is(90L))
+        ));
+
+        progress = sut.calculate(20);
+        assertThat(progress, allOf(
+                hasProperty("tps", is(200.0D)),
+                hasProperty("currentTps", is(300.0D)),
+                hasProperty("estimatedEndTime", is(expectedEstimatedEndTime)),
+                hasProperty("remainingCount", is(80L))
         ));
     }
 
@@ -46,6 +57,7 @@ public class ProcessedCountBasedProgressCalculatorTest {
 
         assertThat(progress, allOf(
                 hasProperty("tps", is(0.0)),
+                hasProperty("currentTps", is(0.0)),
                 hasProperty("estimatedEndTime", is(nullValue())),
                 hasProperty("remainingCount", is(1L))
         ));
