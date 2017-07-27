@@ -76,7 +76,7 @@ public class BasicProgressManagerTest {
             };
 
             progressCalculator.calculate(100);
-            returns(new Progress(1.23, estimatedDate1, 12245), new Progress(1.21, estimatedDate2, 12205));
+            returns(new Progress(1.23, 4.56, estimatedDate1, 12245), new Progress(1.21, 2.34, estimatedDate2, 12205));
         }};
         final ProgressManager sut = new BasicProgressManager(mockJobContext, mockStepContext);
         sut.setInputCount(12345);
@@ -86,10 +86,10 @@ public class BasicProgressManagerTest {
         final List<String> messages = InMemoryAppender.getLogMessages("PROGRESS");
         assertThat(messages, contains(
                 containsString("job name: [test-job] step name: [test-step] input count: [12345]"),
-                containsString("job name: [test-job] step name: [test-step] tps: [1.23] estimated end time: ["
+                containsString("job name: [test-job] step name: [test-step] total tps: [1.23] current tps: [4.56] estimated end time: ["
                         + format.format(estimatedDate1) + "] "
                         + "remaining count: [12245]"),
-                containsString("job name: [test-job] step name: [test-step] tps: [1.21] estimated end time: ["
+                containsString("job name: [test-job] step name: [test-step] total tps: [1.21] current tps: [2.34] estimated end time: ["
                         + format.format(estimatedDate2) + "] "
                         + "remaining count: [12205]")
                 )
@@ -105,9 +105,9 @@ public class BasicProgressManagerTest {
 
         new NonStrictExpectations() {{
             progressCalculator.calculate(1000);
-            result = new Progress(1.23, estimatedDate1, 9000);
+            result = new Progress(1.23, 4.56, estimatedDate1, 9000);
             progressCalculator.calculate(2000);
-            result = new Progress(1.22, estimatedDate2, 7000);
+            result = new Progress(1.22, 2.34, estimatedDate2, 7000);
         }};
 
         final ProgressManager sut = new BasicProgressManager(mockJobContext, mockStepContext);
@@ -118,10 +118,10 @@ public class BasicProgressManagerTest {
         final List<String> messages = InMemoryAppender.getLogMessages("PROGRESS");
         assertThat(messages, contains(
                 containsString("job name: [test-job] step name: [test-step] input count: [10000]"),
-                containsString("job name: [test-job] step name: [test-step] tps: [1.23] estimated end time: ["
+                containsString("job name: [test-job] step name: [test-step] total tps: [1.23] current tps: [4.56] estimated end time: ["
                         + format.format(estimatedDate1) + "] "
                         + "remaining count: [9000]"),
-                containsString("job name: [test-job] step name: [test-step] tps: [1.22] estimated end time: ["
+                containsString("job name: [test-job] step name: [test-step] total tps: [1.22] current tps: [2.34] estimated end time: ["
                         + format.format(estimatedDate2) + "] "
                         + "remaining count: [7000]")
                 )

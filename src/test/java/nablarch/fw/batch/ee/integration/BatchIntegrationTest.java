@@ -239,19 +239,22 @@ public class BatchIntegrationTest {
                 startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] input count: [25]"),
                 startsWith("INFO progress chunk progress. write count=[10]"),
                 allOf(
-                        startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] tps:"),
+                        startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] total tps:"),
+                        containsString("current tps:"),
                         containsString("estimated end time:"),
                         containsString("remaining count: [15]")
                 ),
                 startsWith("INFO progress chunk progress. write count=[20]"),
                 allOf(
-                        startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] tps:"),
+                        startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] total tps:"),
+                        containsString("current tps:"),
                         containsString("estimated end time:"),
                         containsString("remaining count: [5]")
                 ),
                 startsWith("INFO progress chunk progress. write count=[25]"),
                 allOf(
-                        startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] tps:"),
+                        startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] total tps:"),
+                        containsString("current tps:"),
                         containsString("estimated end time:"),
                         containsString("remaining count: [0]")
                 ),
@@ -291,7 +294,8 @@ public class BatchIntegrationTest {
                 startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] input count: [25]"),
                 startsWith("INFO progress chunk progress. write count=[10]"),
                 allOf(
-                        startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] tps:"),
+                        startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] total tps:"),
+                        containsString("current tps:"),
                         containsString("estimated end time:"),
                         containsString("remaining count: [15]")
                 ),
@@ -324,13 +328,15 @@ public class BatchIntegrationTest {
                 startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] input count: [15]"),
                 startsWith("INFO progress chunk progress. write count=[10]"),
                 allOf(
-                        startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] tps:"),
+                        startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] total tps:"),
+                        containsString("current tps:"),
                         containsString("estimated end time:"),
                         containsString("remaining count: [5]")
                 ),
                 startsWith("INFO progress chunk progress. write count=[15]"),
                 allOf(
-                        startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] tps:"),
+                        startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] total tps:"),
+                        containsString("current tps:"),
                         containsString("estimated end time:"),
                         containsString("remaining count: [0]")
                 ),
@@ -542,12 +548,14 @@ public class BatchIntegrationTest {
                 startsWith("INFO progress start step. job name: [multi-step-integration-test] step name: [batchlet]"),
                 startsWith("INFO progress job name: [multi-step-integration-test] step name: [batchlet] input count: [10]"),
                 allOf(
-                        startsWith("INFO progress job name: [multi-step-integration-test] step name: [batchlet] tps:"),
+                        startsWith("INFO progress job name: [multi-step-integration-test] step name: [batchlet] total tps:"),
+                        containsString("current tps:"),
                         containsString("estimated end time:"),
                         containsString("remaining count: [5]")
                 ),
                 allOf(
-                        startsWith("INFO progress job name: [multi-step-integration-test] step name: [batchlet] tps:"),
+                        startsWith("INFO progress job name: [multi-step-integration-test] step name: [batchlet] total tps:"),
+                        containsString("current tps:"),
                         containsString("estimated end time:"),
                         containsString("remaining count: [0]")
                 ),
@@ -556,7 +564,8 @@ public class BatchIntegrationTest {
                 startsWith("INFO progress job name: [multi-step-integration-test] step name: [chunk] input count: [10]"),
                 startsWith("INFO progress chunk progress. write count=[10]"),
                 allOf(
-                        startsWith("INFO progress job name: [multi-step-integration-test] step name: [chunk] tps:"),
+                        startsWith("INFO progress job name: [multi-step-integration-test] step name: [chunk] total tps:"),
+                        containsString("current tps:"),
                         containsString("estimated end time:"),
                         containsString("remaining count: [0]")
                 ),
@@ -600,12 +609,14 @@ public class BatchIntegrationTest {
                 startsWith("INFO progress start step. job name: [multi-step-integration-test] step name: [batchlet]"),
                 startsWith("INFO progress job name: [multi-step-integration-test] step name: [batchlet] input count: [10]"),
                 allOf(
-                        startsWith("INFO progress job name: [multi-step-integration-test] step name: [batchlet] tps:"),
+                        startsWith("INFO progress job name: [multi-step-integration-test] step name: [batchlet] total tps:"),
+                        containsString("current tps:"),
                         containsString("estimated end time:"),
                         containsString("remaining count: [5]")
                 ),
                 allOf(
-                        startsWith("INFO progress job name: [multi-step-integration-test] step name: [batchlet] tps:"),
+                        startsWith("INFO progress job name: [multi-step-integration-test] step name: [batchlet] total tps:"),
+                        containsString("current tps:"),
                         containsString("estimated end time:"),
                         containsString("remaining count: [0]")
                 ),
@@ -642,7 +653,8 @@ public class BatchIntegrationTest {
                 startsWith("INFO progress job name: [multi-step-integration-test] step name: [chunk] input count: [10]"),
                 startsWith("INFO progress chunk progress. write count=[10]"),
                 allOf(
-                        startsWith("INFO progress job name: [multi-step-integration-test] step name: [chunk] tps:"),
+                        startsWith("INFO progress job name: [multi-step-integration-test] step name: [chunk] total tps:"),
+                        containsString("current tps:"),
                         containsString("estimated end time:"),
                         containsString("remaining count: [0]")
                 ),
@@ -854,12 +866,14 @@ public class BatchIntegrationTest {
                 startsWith("INFO progress start step. job name: [batchlet-integration-test] step name: [step1]"),
                 startsWith("INFO progress job name: [batchlet-integration-test] step name: [step1] input count: [10]"),
                 allOf(
-                        startsWith("INFO progress job name: [batchlet-integration-test] step name: [step1] tps:"),
+                        startsWith("INFO progress job name: [batchlet-integration-test] step name: [step1] total tps:"),
+                        containsString("current tps:"),
                         containsString("estimated end time:"),
                         containsString("remaining count: [5]")
                 ),
                 allOf(
-                        startsWith("INFO progress job name: [batchlet-integration-test] step name: [step1] tps:"),
+                        startsWith("INFO progress job name: [batchlet-integration-test] step name: [step1] total tps:"),
+                        containsString("current tps:"),
                         containsString("estimated end time:"),
                         containsString("remaining count: [0]")
                 ),
@@ -888,7 +902,8 @@ public class BatchIntegrationTest {
                 startsWith("INFO progress start step. job name: [batchlet-integration-test] step name: [step1]"),
                 startsWith("INFO progress job name: [batchlet-integration-test] step name: [step1] input count: [10]"),
                 allOf(
-                        startsWith("INFO progress job name: [batchlet-integration-test] step name: [step1] tps:"),
+                        startsWith("INFO progress job name: [batchlet-integration-test] step name: [step1] total tps:"),
+                        containsString("current tps:"),
                         containsString("estimated end time:"),
                         containsString("remaining count: [5]")
                 ),
@@ -916,12 +931,14 @@ public class BatchIntegrationTest {
                 startsWith("INFO progress start step. job name: [multi-step-integration-with-job-listener-test] step name: [batchlet]"),
                 startsWith("INFO progress job name: [multi-step-integration-with-job-listener-test] step name: [batchlet] input count: [10]"),
                 allOf(
-                        startsWith("INFO progress job name: [multi-step-integration-with-job-listener-test] step name: [batchlet] tps:"),
+                        startsWith("INFO progress job name: [multi-step-integration-with-job-listener-test] step name: [batchlet] total tps:"),
+                        containsString("current tps:"),
                         containsString("estimated end time:"),
                         containsString("remaining count: [5]")
                 ),
                 allOf(
-                        startsWith("INFO progress job name: [multi-step-integration-with-job-listener-test] step name: [batchlet] tps:"),
+                        startsWith("INFO progress job name: [multi-step-integration-with-job-listener-test] step name: [batchlet] total tps:"),
+                        containsString("current tps:"),
                         containsString("estimated end time:"),
                         containsString("remaining count: [0]")
                 ),
@@ -930,7 +947,8 @@ public class BatchIntegrationTest {
                 startsWith("INFO progress job name: [multi-step-integration-with-job-listener-test] step name: [chunk] input count: [10]"),
                 startsWith("INFO progress chunk progress. write count=[10]"),
                 allOf(
-                        startsWith("INFO progress job name: [multi-step-integration-with-job-listener-test] step name: [chunk] tps:"),
+                        startsWith("INFO progress job name: [multi-step-integration-with-job-listener-test] step name: [chunk] total tps:"),
+                        containsString("current tps:"),
                         containsString("estimated end time:"),
                         containsString("remaining count: [0]")
                 ),
@@ -958,12 +976,14 @@ public class BatchIntegrationTest {
                 startsWith("INFO progress start step. job name: [multi-step-integration-with-job-listener-test] step name: [batchlet]"),
                 startsWith("INFO progress job name: [multi-step-integration-with-job-listener-test] step name: [batchlet] input count: [10]"),
                 allOf(
-                        startsWith("INFO progress job name: [multi-step-integration-with-job-listener-test] step name: [batchlet] tps:"),
+                        startsWith("INFO progress job name: [multi-step-integration-with-job-listener-test] step name: [batchlet] total tps:"),
+                        containsString("current tps:"),
                         containsString("estimated end time:"),
                         containsString("remaining count: [5]")
                 ),
                 allOf(
-                        startsWith("INFO progress job name: [multi-step-integration-with-job-listener-test] step name: [batchlet] tps:"),
+                        startsWith("INFO progress job name: [multi-step-integration-with-job-listener-test] step name: [batchlet] total tps:"),
+                        containsString("current tps:"),
                         containsString("estimated end time:"),
                         containsString("remaining count: [0]")
                 ),
@@ -986,7 +1006,8 @@ public class BatchIntegrationTest {
                 startsWith("INFO progress job name: [multi-step-integration-with-job-listener-test] step name: [chunk] input count: [10]"),
                 startsWith("INFO progress chunk progress. write count=[10]"),
                 allOf(
-                        startsWith("INFO progress job name: [multi-step-integration-with-job-listener-test] step name: [chunk] tps:"),
+                        startsWith("INFO progress job name: [multi-step-integration-with-job-listener-test] step name: [chunk] total tps:"),
+                        containsString("current tps:"),
                         containsString("estimated end time:"),
                         containsString("remaining count: [0]")
                 ),
@@ -1013,19 +1034,22 @@ public class BatchIntegrationTest {
                 startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] input count: [25]"),
                 startsWith("INFO progress chunk progress. write count=[10]"),
                 allOf(
-                        startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] tps:"),
+                        startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] total tps:"),
+                        containsString("current tps:"),
                         containsString("estimated end time:"),
                         containsString("remaining count: [15]")
                 ),
                 startsWith("INFO progress chunk progress. write count=[20]"),
                 allOf(
-                        startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] tps:"),
+                        startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] total tps:"),
+                        containsString("current tps:"),
                         containsString("estimated end time:"),
                         containsString("remaining count: [5]")
                 ),
                 startsWith("INFO progress chunk progress. write count=[25]"),
                 allOf(
-                        startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] tps:"),
+                        startsWith("INFO progress job name: [chunk-integration-test] step name: [myStep] total tps:"),
+                        containsString("current tps:"),
                         containsString("estimated end time:"),
                         containsString("remaining count: [0]")
                 ),

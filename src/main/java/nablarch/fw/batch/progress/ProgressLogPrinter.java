@@ -15,9 +15,10 @@ public class ProgressLogPrinter implements ProgressPrinter {
         final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd hh:mm:ss.SSS");
 
         final Date estimatedEndTime = progress.getEstimatedEndTime();
-        ProgressLogger.write(String.format("%s tps: [%.2f] estimated end time: [%s] remaining count: [%d]",
+        ProgressLogger.write(String.format("%s total tps: [%.2f] current tps: [%.2f] estimated end time: [%s] remaining count: [%d]",
                 processName.formatProcessName(),
                 progress.getTps(),
+                progress.getCurrentTps(),
                 estimatedEndTime == null ? "unknown" : dateFormat.format(estimatedEndTime),
                 progress.getRemainingCount()));
     }
