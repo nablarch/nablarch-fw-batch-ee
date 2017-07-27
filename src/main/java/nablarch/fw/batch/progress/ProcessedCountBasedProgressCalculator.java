@@ -51,8 +51,8 @@ public class ProcessedCountBasedProgressCalculator implements ProgressCalculator
         }
 
         final double tps = tpsCalculator.calculate(startTime, processedCount);
-        final Date estimatedEndTime = estimatedEndTimeCalculator.calculate(inputCount, processedCount, tps);
         final double currentTps = lastProcessedCount == 0 ? tps : tpsCalculator.calculate(lastProcessedTime, processedCount - lastProcessedCount);
+        final Date estimatedEndTime = estimatedEndTimeCalculator.calculate(inputCount, processedCount, currentTps);
         lastProcessedCount = processedCount;
         lastProcessedTime = System.nanoTime();
         return new Progress(tps, currentTps, estimatedEndTime, inputCount - processedCount);

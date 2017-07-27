@@ -27,7 +27,7 @@ public class ProcessedCountBasedProgressCalculatorTest {
             returns(100.0D, 200.0D, 300.0D);
             mockEstimatedEndTimeCalculator.calculate(100L, 10L, 100);
             result = expectedEstimatedEndTime;
-            mockEstimatedEndTimeCalculator.calculate(100L, 20L, 200);
+            mockEstimatedEndTimeCalculator.calculate(100L, 20L, 300);
             result = expectedEstimatedEndTime;
         }};
 
