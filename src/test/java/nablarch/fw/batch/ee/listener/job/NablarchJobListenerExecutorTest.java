@@ -1,25 +1,30 @@
 package nablarch.fw.batch.ee.listener.job;
 
-import mockit.Deencapsulation;
-import mockit.Mocked;
-import mockit.NonStrictExpectations;
-import mockit.VerificationsInOrder;
-import nablarch.core.repository.ObjectLoader;
-import nablarch.core.repository.SystemRepository;
-import nablarch.fw.batch.ee.initializer.LogInitializer;
-import nablarch.fw.batch.ee.initializer.RepositoryInitializer;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
-import nablarch.fw.batch.ee.listener.NablarchListenerContext;
-import org.junit.Before;
-import org.junit.Test;
-
-import javax.batch.runtime.context.JobContext;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.fail;
+import javax.batch.runtime.context.JobContext;
+
+import nablarch.core.repository.ObjectLoader;
+import nablarch.core.repository.SystemRepository;
+import nablarch.fw.batch.ee.initializer.LogInitializer;
+import nablarch.fw.batch.ee.initializer.RepositoryInitializer;
+import nablarch.fw.batch.ee.listener.NablarchListenerContext;
+
+import org.junit.Before;
+import org.junit.Test;
+
+import mockit.Deencapsulation;
+import mockit.Mocked;
+import mockit.NonStrictExpectations;
+import mockit.VerificationsInOrder;
 
 /**
  * {@link NablarchJobListenerExecutor}のテスト。
@@ -108,6 +113,57 @@ public class NablarchJobListenerExecutorTest {
             sut.afterJob();
         } catch (Exception e) {
             fail("例外は発生しない");
+        }
+    }
+
+    /**
+     * ListenerでJobContextやStepContextを使えることを確認するテスト。
+     * @throws Exception
+     */
+    @Test
+    public void testUseContext() throws Exception {
+        final TestJobListener jobListener = new TestJobListener();
+        SystemRepository.load(new ObjectLoader() {
+            @Override
+            public Map<String, Object> load() {
+                List<NablarchJobListener> listeners = new ArrayList<NablarchJobListener>();
+                listeners.add(jobListener);
+                return Collections.<String, Object>singletonMap("jobListeners", listeners);
+            }
+        });
+
+        sut.beforeJob();
+        sut.afterJob();
+
+        assertThat(jobListener.before, is(true));
+        assertThat(jobListener.after, is(true));
+        
+    }
+    
+    private static class TestJobListener extends AbstractNablarchJobListener {
+
+        private boolean after;
+
+        private boolean before;
+
+        @Override
+        public void beforeJob(final NablarchListenerContext context) {
+            before = true;
+            final JobContext jobContext = context.getJobContext();
+            if (!jobContext.getJobName()
+                           .equals("testJob")) {
+                throw new IllegalArgumentException("ジョブ名が想定と違います。");
+            }
+
+            if (context.getStepContext() != null) {
+                throw new IllegalArgumentException("step contextは取れないはず");
+            }
+        }
+
+        @Override
+        public void afterJob(final NablarchListenerContext context) {
+            after = true;
+            beforeJob(context);
         }
     }
 }

@@ -120,6 +120,26 @@ public class NablarchListenerContext {
     }
 
     /**
+     * {@link JobContext}を返す。
+     *
+     * @return JobContext
+     */
+    public JobContext getJobContext() {
+        return jobContext;
+    }
+
+    /**
+     * {@link StepContext}を返す。
+     * <p>
+     * ステップの情報が取れない場合には、{@code null}を返す。
+     *
+     * @return StepContext
+     */
+    public StepContext getStepContext() {
+        return stepContext;
+    }
+
+    /**
      * stepContextのMetricからtypeの値を取得する。
      * @param type 取得したい値のタイプ
      * @return typeの値

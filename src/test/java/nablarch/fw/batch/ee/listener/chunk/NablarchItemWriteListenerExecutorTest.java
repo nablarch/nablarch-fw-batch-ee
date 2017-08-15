@@ -1,24 +1,28 @@
 package nablarch.fw.batch.ee.listener.chunk;
 
-import mockit.Deencapsulation;
-import mockit.Mocked;
-import mockit.NonStrictExpectations;
-import mockit.VerificationsInOrder;
-import nablarch.core.repository.ObjectLoader;
-import nablarch.core.repository.SystemRepository;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
-import nablarch.fw.batch.ee.listener.NablarchListenerContext;
-import org.junit.Before;
-import org.junit.Test;
-
-import javax.batch.runtime.context.JobContext;
-import javax.batch.runtime.context.StepContext;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.fail;
+import javax.batch.runtime.context.JobContext;
+import javax.batch.runtime.context.StepContext;
+
+import nablarch.core.repository.ObjectLoader;
+import nablarch.core.repository.SystemRepository;
+import nablarch.fw.batch.ee.listener.NablarchListenerContext;
+
+import org.junit.Before;
+import org.junit.Test;
+
+import mockit.Deencapsulation;
+import mockit.Mocked;
+import mockit.NonStrictExpectations;
+import mockit.VerificationsInOrder;
 
 /**
  * {@link NablarchItemWriteListenerExecutor}のテスト。
@@ -165,6 +169,68 @@ public class NablarchItemWriteListenerExecutorTest {
             sut.onWriteError(new ArrayList<Object>(), new IllegalStateException());
         } catch (Exception e) {
             fail("例外は発生しない");
+        }
+    }
+
+    /**
+     * 呼び出されるリスナーで、JobContext及びStepContextが利用できることを確認するテスト。
+     */
+    @Test
+    public void testUseContext() throws Exception {
+        final TestItemWriterListener testListener = new TestItemWriterListener();
+        SystemRepository.load(new ObjectLoader() {
+            @Override
+            public Map<String, Object> load() {
+                List<NablarchItemWriteListener> listeners = new ArrayList<NablarchItemWriteListener>();
+                listeners.add(testListener);
+                Map<String, Object> objects = new HashMap<String, Object>();
+                objects.put("itemWriteListeners", listeners);
+                return objects;
+            }
+        });
+
+        final List<Object> items = new ArrayList<Object>();
+
+        sut.beforeWrite(items);
+        sut.afterWrite(items);
+        sut.onWriteError(items, new IllegalStateException());
+
+        assertThat(testListener.before, is(true));
+        assertThat(testListener.after, is(true));
+        assertThat(testListener.error, is(true));
+    }
+    
+    private static class TestItemWriterListener extends AbstractNablarchItemWriteListener {
+        
+        boolean before;
+        boolean after;
+        boolean error;
+
+        @Override
+        public void beforeWrite(final NablarchListenerContext context, final List<Object> items) {
+            before = true;
+            final JobContext jobContext = context.getJobContext();
+            final StepContext stepContext = context.getStepContext();
+            if (!jobContext.getJobName()
+                          .equals("testJob")) {
+                throw new IllegalArgumentException("ジョブ名がおかしいです");
+            }
+            if (!stepContext.getStepName()
+                           .equals("testStep")) {
+                throw new IllegalArgumentException("ステップ名がおかしいです");
+            }
+        }
+
+        @Override
+        public void afterWrite(final NablarchListenerContext context, final List<Object> items) {
+            after = true;
+            beforeWrite(context, items);
+        }
+
+        @Override
+        public void onWriteError(final NablarchListenerContext context, final List<Object> items, final Exception ex) {
+            error = true;
+            beforeWrite(context, items);
         }
     }
 }
