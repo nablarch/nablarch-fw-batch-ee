@@ -6,11 +6,14 @@ import javax.batch.runtime.Metric.MetricType;
 import javax.batch.runtime.context.JobContext;
 import javax.batch.runtime.context.StepContext;
 
+import nablarch.core.util.annotation.Published;
+
 /**
  * リスナー実行時のコンテキスト情報を保持するクラス。
  *
  * @author Kiyohito Itoh
  */
+@Published(tag = "architect")
 public class NablarchListenerContext {
 
     /** {@link JobContext } */

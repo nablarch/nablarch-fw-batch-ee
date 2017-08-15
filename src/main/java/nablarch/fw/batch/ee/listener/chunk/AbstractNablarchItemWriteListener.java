@@ -1,8 +1,9 @@
 package nablarch.fw.batch.ee.listener.chunk;
 
-import nablarch.fw.batch.ee.listener.NablarchListenerContext;
-
 import java.util.List;
+
+import nablarch.core.util.annotation.Published;
+import nablarch.fw.batch.ee.listener.NablarchListenerContext;
 
 /**
  * {@link NablarchItemWriteListener}を実装した抽象クラス。
@@ -11,6 +12,7 @@ import java.util.List;
  *
  * @author Hisaaki sioiri
  */
+@Published(tag = "architect")
 public abstract class AbstractNablarchItemWriteListener implements NablarchItemWriteListener {
     @Override
     public void beforeWrite(NablarchListenerContext context, List<Object> items) {

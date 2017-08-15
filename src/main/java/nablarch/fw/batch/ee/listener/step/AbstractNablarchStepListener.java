@@ -1,5 +1,6 @@
 package nablarch.fw.batch.ee.listener.step;
 
+import nablarch.core.util.annotation.Published;
 import nablarch.fw.batch.ee.listener.NablarchListenerContext;
 
 /**
@@ -9,6 +10,7 @@ import nablarch.fw.batch.ee.listener.NablarchListenerContext;
  *
  * @author Hisaaki sioiri
  */
+@Published(tag = "architect")
 public abstract class AbstractNablarchStepListener implements NablarchStepListener {
 
     @Override
