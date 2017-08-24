@@ -50,7 +50,7 @@ public class MainTest {
     @Test
     public void testMainNotOneArgument() {
         expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage(is("Please specify JOB XML name as the first argument."));
+        expectedException.expectMessage(is("command line args is unsupported. specify only the command line option.(example: --name1 value1 --name2 value2)"));
         Main.main("arg1", "arg2");
     }
 
@@ -71,7 +71,7 @@ public class MainTest {
     public void testMainSuccess() {
         new Expectations() {{
             final JobOperator jobOperator = BatchRuntime.getJobOperator();
-            jobOperator.start("main-test-Job1", new Properties());
+            jobOperator.start("main-test-Job1", null);
             result = 1L;
             final JobExecution jobExecution = jobOperator.getJobExecution(1L);
             jobExecution.getBatchStatus();

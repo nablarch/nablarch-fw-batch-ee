@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.logging.LogManager;
 
 import javax.batch.runtime.BatchStatus;
@@ -1187,7 +1188,7 @@ public class BatchIntegrationTest {
      */
     @Test
     public void testJobExecutorSuccessBatchlet() throws Exception {
-        final JobExecutor executor = new JobExecutor("success-batchlet-test");
+        final JobExecutor executor = new JobExecutor("success-batchlet-test", new Properties());
         int exitCode = executor.execute();
         assertThat(exitCode, is(0));
         assertThat(executor.getJobExecution().getExitStatus(), not("WARNING"));
@@ -1199,7 +1200,7 @@ public class BatchIntegrationTest {
      */
     @Test
     public void testJobExecutorSuccessChunk() throws Exception {
-        final JobExecutor executor = new JobExecutor("success-chunk-test");
+        final JobExecutor executor = new JobExecutor("success-chunk-test", new Properties());
         int exitCode = executor.execute();
         assertThat(exitCode, is(0));
         assertThat(executor.getJobExecution().getExitStatus(), not("WARNING"));
@@ -1211,7 +1212,7 @@ public class BatchIntegrationTest {
      */
     @Test
     public void testJobExecutorWarningBatchlet() throws Exception {
-        final JobExecutor executor = new JobExecutor("warning-batchlet-test");
+        final JobExecutor executor = new JobExecutor("warning-batchlet-test", new Properties());
         int exitCode = executor.execute();
         assertThat(exitCode, is(2));
         assertThat(executor.getJobExecution().getExitStatus(), is("WARNING"));
@@ -1223,7 +1224,7 @@ public class BatchIntegrationTest {
      */
     @Test
     public void testJobExecutorWarningBatchletThrowError() throws Exception {
-        final JobExecutor executor = new JobExecutor("warning-batchlet-throw-error-test");
+        final JobExecutor executor = new JobExecutor("warning-batchlet-throw-error-test", new Properties());
         int exitCode = executor.execute();
         assertThat(exitCode, is(2));
         assertThat(executor.getJobExecution().getExitStatus(), is("WARNING"));
@@ -1235,7 +1236,7 @@ public class BatchIntegrationTest {
      */
     @Test
     public void testJobExecutorWarningChunk() throws Exception {
-        final JobExecutor executor = new JobExecutor("warning-chunk-test");
+        final JobExecutor executor = new JobExecutor("warning-chunk-test", new Properties());
         int exitCode = executor.execute();
         assertThat(exitCode, is(2));
         assertThat(executor.getJobExecution().getExitStatus(), is("WARNING"));
@@ -1248,7 +1249,7 @@ public class BatchIntegrationTest {
      */
     @Test
     public void testJobExecutorWarningChunkThrowError() throws Exception {
-        final JobExecutor executor = new JobExecutor("warning-chunk-throw-error-test");
+        final JobExecutor executor = new JobExecutor("warning-chunk-throw-error-test", new Properties());
         int exitCode = executor.execute();
         assertThat(exitCode, is(2));
         assertThat(executor.getJobExecution().getExitStatus(), is("WARNING"));
@@ -1260,7 +1261,7 @@ public class BatchIntegrationTest {
      */
     @Test
     public void testJobExecutorFailureBatchletThrowError() throws Exception {
-        final JobExecutor executor = new JobExecutor("failure-batchlet-throw-error-test");
+        final JobExecutor executor = new JobExecutor("failure-batchlet-throw-error-test", new Properties());
         int exitCode = executor.execute();
         assertThat(exitCode, is(1));
         assertThat(executor.getJobExecution().getExitStatus(), not("WARNING"));
@@ -1272,7 +1273,7 @@ public class BatchIntegrationTest {
      */
     @Test
     public void testJobExecutorFailureChunkThrowError() throws Exception {
-        final JobExecutor executor = new JobExecutor("failure-chunk-throw-error-test");
+        final JobExecutor executor = new JobExecutor("failure-chunk-throw-error-test", new Properties());
         int exitCode = executor.execute();
         assertThat(exitCode, is(1));
         assertThat(executor.getJobExecution().getExitStatus(), not("WARNING"));

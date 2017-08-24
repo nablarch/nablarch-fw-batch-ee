@@ -39,6 +39,7 @@ dependencies {
   compile "com.nablarch.framework:nablarch-core-transaction:${nablarchCoreTransactionVersion}"
   compile "com.nablarch.framework:nablarch-common-dao:${nablarchCommonDaoVersion}"
   compile "com.nablarch.framework:nablarch-fw-batch:${nablarchFwBatchVersion}"
+  compile "com.nablarch.framework:nablarch-fw-standalone:${nablarchFwStandaloneVersion}"
 
   // jdbc
   compile "com.nablarch.framework:nablarch-common-jdbc:${nablarchCommonJdbcVersion}"
@@ -47,7 +48,7 @@ dependencies {
   testCompile 'org.jmockit:jmockit:1.13'
   testCompile 'junit:junit:4.12'
   testCompile 'org.hamcrest:hamcrest-all:1.3'
-  testCompile 'com.nablarch.integration:nablarch-slf4j-adaptor:1.0.0'
+  testRuntime 'com.nablarch.integration:nablarch-slf4j-adaptor:1.0.0'
 
   testCompile 'com.h2database:h2:1.4.187'
   testCompile 'com.github.stefanbirkner:system-rules:1.16.0'

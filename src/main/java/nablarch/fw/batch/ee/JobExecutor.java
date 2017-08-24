@@ -1,6 +1,7 @@
 package nablarch.fw.batch.ee;
 
 import java.util.HashSet;
+import java.util.Properties;
 import java.util.Set;
 
 import javax.batch.operations.JobOperator;
@@ -29,10 +30,11 @@ import javax.batch.runtime.JobExecution;
  */
 public class JobExecutor {
 
-    /**
-     * JOB XMLファイル名（.xmlを除いた名前）
-     */
+    /** JOB XMLファイル名（.xmlを除いた名前） */
     private final String jobXmlName;
+
+    /** バッチ起動時に指定する引数 */
+    private final Properties properties;
 
     /**
      * JOBの実行情報。
@@ -42,9 +44,11 @@ public class JobExecutor {
     /**
      * コンストラクタ
      * @param jobXmlName JOB XMLファイル名
+     * @param properties properties
      */
-    public JobExecutor(final String jobXmlName) {
+    public JobExecutor(final String jobXmlName, final Properties properties) {
         this.jobXmlName = jobXmlName;
+        this.properties = properties;
     }
 
     /**
@@ -96,7 +100,7 @@ public class JobExecutor {
             throw new IllegalStateException(String.format("Job is already started. JobXmlName=[%s]", jobXmlName));
         }
         final JobOperator jobOperator = BatchRuntime.getJobOperator();
-        final long executionId = jobOperator.start(jobXmlName, null);
+        final long executionId = jobOperator.start(jobXmlName, properties);
         jobExecution = jobOperator.getJobExecution(executionId);
     }
 
