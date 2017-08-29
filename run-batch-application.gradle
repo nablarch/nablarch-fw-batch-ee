@@ -17,19 +17,19 @@ dependencies {
 
 task runBatchlet(type: JavaExec, dependsOn: 'copyFile') {
   classpath += configurations.jberet + getTestRuntimeClasspathWithoutGlassfish()
-  main = "org.jberet.se.Main"
-  args "batchlet-progress-test"
+  main = "nablarch.fw.batch.ee.Main"
+  args = ["batchlet-progress-test", "--diConfig", "manual-test/jbatch.xml", "--key1", "value1"]
 }
 
 task runChunk(type: JavaExec, dependsOn: 'copyFile') {
   classpath += configurations.jberet + getTestRuntimeClasspathWithoutGlassfish()
-  main = "org.jberet.se.Main"
+  main = "nablarch.fw.batch.ee.Main"
   args "chunk-progress-test"
 }
 
 task runSplit(type: JavaExec, dependsOn: 'copyFile') {
   classpath += configurations.jberet + getTestRuntimeClasspathWithoutGlassfish()
-  main = "org.jberet.se.Main"
+  main = "nablarch.fw.batch.ee.Main"
   args "split-progress-test"
 }
 

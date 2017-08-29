@@ -5,6 +5,8 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import java.util.Properties;
+
 import javax.batch.operations.JobOperator;
 import javax.batch.runtime.BatchRuntime;
 import javax.batch.runtime.BatchStatus;
@@ -35,10 +37,10 @@ public class JobExecutorTest {
      */
     @Test
     public void testInterrupted() {
-        final JobExecutor executor = new JobExecutor("job-interrupted");
+        final JobExecutor executor = new JobExecutor("job-interrupted", new Properties());
         new Expectations() {{
             final JobOperator jobOperator = BatchRuntime.getJobOperator();
-            jobOperator.start(executor.getJobXmlName(), null);
+            jobOperator.start(executor.getJobXmlName(), new Properties());
             result = 1L;
             final JobExecution jobExecution = jobOperator.getJobExecution(1L);
             jobExecution.getBatchStatus();
@@ -53,10 +55,10 @@ public class JobExecutorTest {
      */
     @Test
     public void testFailedEnd() {
-        final JobExecutor executor = new JobExecutor("job-failed");
+        final JobExecutor executor = new JobExecutor("job-failed", new Properties());
         new Expectations() {{
             final JobOperator jobOperator = BatchRuntime.getJobOperator();
-            jobOperator.start(executor.getJobXmlName(), null);
+            jobOperator.start(executor.getJobXmlName(), new Properties());
             result = 1L;
             final JobExecution jobExecution = jobOperator.getJobExecution(1L);
             jobExecution.getBatchStatus();
@@ -71,10 +73,10 @@ public class JobExecutorTest {
      */
     @Test
     public void testStoppedEnd() {
-        final JobExecutor executor = new JobExecutor("job-stopped");
+        final JobExecutor executor = new JobExecutor("job-stopped", new Properties());
         new Expectations() {{
             final JobOperator jobOperator = BatchRuntime.getJobOperator();
-            jobOperator.start(executor.getJobXmlName(), null);
+            jobOperator.start(executor.getJobXmlName(), new Properties());
             result = 1L;
             final JobExecution jobExecution = jobOperator.getJobExecution(1L);
             jobExecution.getBatchStatus();
@@ -89,10 +91,12 @@ public class JobExecutorTest {
      */
     @Test
     public void testAbandonedEnd() {
-        final JobExecutor executor = new JobExecutor("job-abandoned");
+        final Properties properties = new Properties();
+        properties.put("key1", "key2");
+        final JobExecutor executor = new JobExecutor("job-abandoned", properties);
         new Expectations() {{
             final JobOperator jobOperator = BatchRuntime.getJobOperator();
-            jobOperator.start(executor.getJobXmlName(), null);
+            jobOperator.start(executor.getJobXmlName(), properties);
             result = 1L;
             final JobExecution jobExecution = jobOperator.getJobExecution(1L);
             jobExecution.getBatchStatus();
@@ -107,10 +111,10 @@ public class JobExecutorTest {
      */
     @Test
     public void testCompletedEnd() {
-        final JobExecutor executor = new JobExecutor("job-completed");
+        final JobExecutor executor = new JobExecutor("job-completed", new Properties());
         new Expectations() {{
             final JobOperator jobOperator = BatchRuntime.getJobOperator();
-            jobOperator.start(executor.getJobXmlName(), null);
+            jobOperator.start(executor.getJobXmlName(), new Properties());
             result = 1L;
             final JobExecution jobExecution = jobOperator.getJobExecution(1L);
             jobExecution.getBatchStatus();
@@ -125,10 +129,10 @@ public class JobExecutorTest {
      */
     @Test
     public void testIntermediateStatuses() {
-        final JobExecutor executor = new JobExecutor("job-intermediate-statues");
+        final JobExecutor executor = new JobExecutor("job-intermediate-statues", new Properties());
         new Expectations() {{
             final JobOperator jobOperator = BatchRuntime.getJobOperator();
-            jobOperator.start(executor.getJobXmlName(), null);
+            jobOperator.start(executor.getJobXmlName(), new Properties());
             result = 1L;
             final JobExecution jobExecution = jobOperator.getJobExecution(1L);
             jobExecution.getBatchStatus();
@@ -143,10 +147,10 @@ public class JobExecutorTest {
      */
     @Test
     public void testWarning() {
-        final JobExecutor executor = new JobExecutor("job-warning");
+        final JobExecutor executor = new JobExecutor("job-warning", new Properties());
         new Expectations() {{
             final JobOperator jobOperator = BatchRuntime.getJobOperator();
-            jobOperator.start(executor.getJobXmlName(), null);
+            jobOperator.start(executor.getJobXmlName(), new Properties());
             result = 1L;
             final JobExecution jobExecution = jobOperator.getJobExecution(1L);
             jobExecution.getBatchStatus();
@@ -163,10 +167,10 @@ public class JobExecutorTest {
      */
     @Test
     public void testJobExecution() {
-        final JobExecutor executor = new JobExecutor("job-warning");
+        final JobExecutor executor = new JobExecutor("job-warning", new Properties());
         new Expectations() {{
             final JobOperator jobOperator = BatchRuntime.getJobOperator();
-            jobOperator.start(executor.getJobXmlName(), null);
+            jobOperator.start(executor.getJobXmlName(), new Properties());
             result = 3L;
             final JobExecution jobExecution = jobOperator.getJobExecution(3L);
             jobExecution.getBatchStatus();
@@ -187,7 +191,7 @@ public class JobExecutorTest {
     public void testExecuteTwice() {
         expectedException.expect(IllegalStateException.class);
         expectedException.expectMessage(is("Job is already started. JobXmlName=[job-twice]"));
-        final JobExecutor executor = new JobExecutor("job-twice");
+        final JobExecutor executor = new JobExecutor("job-twice", new Properties());
         new Expectations() {{
             final JobOperator jobOperator = BatchRuntime.getJobOperator();
             jobOperator.start(executor.getJobXmlName(), null);
@@ -208,7 +212,7 @@ public class JobExecutorTest {
     public void testExecuteLessThanOne() {
         expectedException.expect(IllegalArgumentException.class);
         expectedException.expectMessage(is("mills must be greater than 0."));
-        final JobExecutor executor = new JobExecutor("job-wait-time=0");
+        final JobExecutor executor = new JobExecutor("job-wait-time=0", new Properties());
         int exitCode = executor.execute(0);
     }
 
@@ -217,10 +221,10 @@ public class JobExecutorTest {
      */
     @Test
     public void testExecutePlusMills() {
-        final JobExecutor executor = new JobExecutor("job-wait-time=500");
+        final JobExecutor executor = new JobExecutor("job-wait-time=500", new Properties());
         new Expectations() {{
             final JobOperator jobOperator = BatchRuntime.getJobOperator();
-            jobOperator.start(executor.getJobXmlName(), null);
+            jobOperator.start(executor.getJobXmlName(), new Properties());
             result = 1L;
             final JobExecution jobExecution = jobOperator.getJobExecution(1L);
             jobExecution.getBatchStatus();

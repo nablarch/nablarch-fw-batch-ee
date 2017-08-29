@@ -1,8 +1,12 @@
 <job id="batchlet-progress-test" xmlns="http://xmlns.jcp.org/xml/ns/javaee" version="1.0">
+  <properties>
+    <property name="key1" value="#{jobParameters['key1']}" />
+    <property name="key2" value="これはリテラル" />
+  </properties>
   <listeners>
     <listener ref="nablarchJobListenerExecutor">
       <properties>
-        <property name="diConfigFilePath" value="manual-test/jbatch.xml" />
+        <property name="diConfigFilePath" value="#{jobParameters['diConfig']}" />
       </properties>
     </listener>
   </listeners>
