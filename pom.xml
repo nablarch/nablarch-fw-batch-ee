@@ -15,7 +15,7 @@
   </parent>
 
   <properties>
-    <junit.argLine>-Dfile.encoding=utf-8 -Djdk.attach.allowAttachSelf -XX:MaxPermSize=256m</junit.argLine>
+    <junit.additionalArgLine>-XX:MaxPermSize=256m</junit.additionalArgLine>
   </properties>
 
   <dependencies>
