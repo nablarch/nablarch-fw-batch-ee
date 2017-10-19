@@ -21,7 +21,7 @@ import org.junit.Test;
 
 import mockit.Deencapsulation;
 import mockit.Mocked;
-import mockit.NonStrictExpectations;
+import mockit.Expectations;
 import mockit.VerificationsInOrder;
 
 /**
@@ -46,11 +46,15 @@ public class NablarchItemWriteListenerExecutorTest {
 
     @Before
     public void setUp() throws Exception {
-        new NonStrictExpectations() {{
+        new Expectations() {{
             mockJobContext.getJobName();
             result = "testJob";
+            maxTimes = 1;
+            minTimes = 0;
             mockStepContext.getStepName();
             result = "testStep";
+            maxTimes = 1;
+            minTimes = 0;
         }};
 
         Deencapsulation.setField(sut, "jobContext", mockJobContext);

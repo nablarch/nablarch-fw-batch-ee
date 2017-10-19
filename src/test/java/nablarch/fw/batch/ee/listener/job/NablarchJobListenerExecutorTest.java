@@ -12,6 +12,7 @@ import java.util.Map;
 
 import javax.batch.runtime.context.JobContext;
 
+import mockit.Expectations;
 import nablarch.core.repository.ObjectLoader;
 import nablarch.core.repository.SystemRepository;
 import nablarch.fw.batch.ee.initializer.LogInitializer;
@@ -23,7 +24,6 @@ import org.junit.Test;
 
 import mockit.Deencapsulation;
 import mockit.Mocked;
-import mockit.NonStrictExpectations;
 import mockit.VerificationsInOrder;
 
 /**
@@ -52,8 +52,10 @@ public class NablarchJobListenerExecutorTest {
 
     @Before
     public void setUp() throws Exception {
-        new NonStrictExpectations() {{
+        new Expectations() {{
             mockJobContext.getJobName();
+            maxTimes = 1;
+            minTimes = 0;
             result = "testJob";
         }};
 

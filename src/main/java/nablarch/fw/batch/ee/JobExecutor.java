@@ -118,7 +118,8 @@ public class JobExecutor {
         endStatuses.add(BatchStatus.STOPPED);
         while (true) {
             try {
-                if (endStatuses.contains(jobExecution.getBatchStatus())) {
+                BatchStatus batchStatus = jobExecution.getBatchStatus();
+                if (endStatuses.contains(batchStatus)) {
                     break;
                 }
                 Thread.sleep(mills);

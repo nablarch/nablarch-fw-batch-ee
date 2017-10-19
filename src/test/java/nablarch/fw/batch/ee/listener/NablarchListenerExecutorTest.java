@@ -1,8 +1,8 @@
 package nablarch.fw.batch.ee.listener;
 
 import mockit.Deencapsulation;
+import mockit.Expectations;
 import mockit.Mocked;
-import mockit.NonStrictExpectations;
 import nablarch.core.repository.ObjectLoader;
 import nablarch.core.repository.SystemRepository;
 import nablarch.fw.batch.ee.integration.InMemoryAppender;
@@ -39,11 +39,15 @@ public class NablarchListenerExecutorTest {
 
     @Before
     public void setUp() throws Exception {
-        new NonStrictExpectations() {{
+        new Expectations() {{
             jobContext.getJobName();
             result = "testJob";
+            maxTimes = 1;
+            minTimes = 0;
             stepContext.getStepName();
             result = "testStep";
+            maxTimes = 1;
+            minTimes = 0;
         }};
 
         sut = new NablarchListenerExecutor<String>("testListeners", jobContext);

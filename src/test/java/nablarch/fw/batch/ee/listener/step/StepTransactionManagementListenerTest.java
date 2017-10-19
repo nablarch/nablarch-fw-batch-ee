@@ -149,7 +149,7 @@ public class StepTransactionManagementListenerTest {
             result = mockTransaction;
 
             mockStepContext.getException();
-            returns(new RuntimeException("step error."));
+            returns(new RuntimeException("step error."), null);
         }};
 
         sut.beforeStep(new NablarchListenerContext(mockJobContext, mockStepContext));
