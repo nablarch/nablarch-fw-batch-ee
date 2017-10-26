@@ -71,7 +71,7 @@ public class MainTest {
     public void testMainSuccess() {
         new Expectations() {{
             final JobOperator jobOperator = BatchRuntime.getJobOperator();
-            jobOperator.start("main-test-Job1", null);
+            jobOperator.start("main-test-Job1", new Properties());
             result = 1L;
             final JobExecution jobExecution = jobOperator.getJobExecution(1L);
             jobExecution.getBatchStatus();

@@ -14,6 +14,7 @@ import javax.batch.runtime.Metric;
 import javax.batch.runtime.context.JobContext;
 import javax.batch.runtime.context.StepContext;
 
+import mockit.Expectations;
 import nablarch.fw.batch.ee.integration.InMemoryAppender;
 import nablarch.fw.batch.progress.ProcessedCountBasedProgressCalculator;
 import nablarch.fw.batch.progress.Progress;
@@ -24,7 +25,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import mockit.Mocked;
-import mockit.NonStrictExpectations;
 
 /**
  * {@link BasicProgressManager}のテスト。
@@ -44,7 +44,7 @@ public class BasicProgressManagerTest {
     public void setUp() throws Exception {
         InMemoryAppender.clear();
 
-        new NonStrictExpectations() {{
+        new Expectations() {{
             mockJobContext.getJobName();
             result = "test-job";
             mockStepContext.getStepName();
@@ -59,7 +59,7 @@ public class BasicProgressManagerTest {
         TimeUnit.MILLISECONDS.sleep(100);
         final Date estimatedDate2 = new Date();
         
-        new NonStrictExpectations() {{
+        new Expectations() {{
             mockStepContext.getMetrics();
             result = new Metric[] {
                     new Metric() {
@@ -103,7 +103,7 @@ public class BasicProgressManagerTest {
         TimeUnit.MILLISECONDS.sleep(100);
         final Date estimatedDate2 = new Date();
 
-        new NonStrictExpectations() {{
+        new Expectations() {{
             progressCalculator.calculate(1000);
             result = new Progress(1.23, 4.56, estimatedDate1, 9000);
             progressCalculator.calculate(2000);
@@ -179,7 +179,7 @@ public class BasicProgressManagerTest {
     @Test
     public void 入力件数を設定せずに進捗ログを出力しようとした場合はエラーとなること() throws Exception {
 
-        new NonStrictExpectations() {{
+        new Expectations() {{
             mockStepContext.getMetrics();
             result = new Metric[] {
                     new Metric() {
@@ -203,7 +203,7 @@ public class BasicProgressManagerTest {
 
     @Test
     public void StepContextかリード済み件数が取れない場合はエラーとなること() throws Exception {
-        new NonStrictExpectations() {{
+        new Expectations() {{
             mockStepContext.getMetrics();
             result = new Metric[0];
         }};

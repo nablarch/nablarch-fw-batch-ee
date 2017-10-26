@@ -12,6 +12,7 @@ import javax.batch.runtime.BatchRuntime;
 import javax.batch.runtime.BatchStatus;
 import javax.batch.runtime.JobExecution;
 
+import mockit.Mock;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -191,10 +192,11 @@ public class JobExecutorTest {
     public void testExecuteTwice() {
         expectedException.expect(IllegalStateException.class);
         expectedException.expectMessage(is("Job is already started. JobXmlName=[job-twice]"));
-        final JobExecutor executor = new JobExecutor("job-twice", new Properties());
+        final Properties properties = new Properties();
+        final JobExecutor executor = new JobExecutor("job-twice", properties);
         new Expectations() {{
             final JobOperator jobOperator = BatchRuntime.getJobOperator();
-            jobOperator.start(executor.getJobXmlName(), null);
+            jobOperator.start(executor.getJobXmlName(), properties);
             result = 1L;
             final JobExecution jobExecution = jobOperator.getJobExecution(1L);
             jobExecution.getBatchStatus();
