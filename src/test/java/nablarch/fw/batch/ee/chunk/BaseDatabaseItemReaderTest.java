@@ -16,6 +16,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import nablarch.common.dao.EntityUtil;
 import nablarch.common.dao.UniversalDao;
 import nablarch.core.db.connection.ConnectionFactory;
 import nablarch.core.db.connection.DbConnectionContext;
@@ -189,8 +190,9 @@ public class BaseDatabaseItemReaderTest {
 
         @Override
         protected void doOpen(final Serializable checkpoint) throws Exception {
+            EntityUtil.getTableName(TestEntity.class);
             entityList = UniversalDao.defer()
-                                     .findAll(TestEntity.class)
+                                     .findAllBySqlFile(TestEntity.class, "find_all")
                                      .iterator();
         }
 
@@ -227,7 +229,7 @@ public class BaseDatabaseItemReaderTest {
     public static class TestEntity {
 
         @Id
-        @Column(name = "id")
+        @Column(name = "id", length = 10)
         public Integer id;
 
         @Column(length = 16, name = "name")
