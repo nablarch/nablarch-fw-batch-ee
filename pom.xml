@@ -18,6 +18,28 @@
     <junit.additionalArgLine>-XX:MaxPermSize=256m</junit.additionalArgLine>
   </properties>
 
+  <profiles>
+    <profile>
+      <id>java9</id>
+      <activation>
+        <jdk>9</jdk>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <excludes>
+                <exclude>nablarch.fw.batch.ee.integration.BatchIntegrationTest</exclude>
+              </excludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
   <dependencies>
 
     <dependency>
