@@ -13,14 +13,10 @@ import javax.batch.runtime.BatchStatus;
 import javax.batch.runtime.JobExecution;
 import javax.sql.DataSource;
 
-import nablarch.core.db.DbExecutionContext;
-import nablarch.core.db.connection.BasicDbConnection;
-import nablarch.core.db.dialect.OracleDialect;
 import nablarch.core.db.statement.ResultSetIterator;
 import nablarch.core.db.statement.SqlResultSet;
 import nablarch.core.repository.di.DiContainer;
 import nablarch.core.repository.di.config.xml.XmlComponentDefinitionLoader;
-import nablarch.core.transaction.TransactionContext;
 
 import org.junit.rules.ExternalResource;
 
@@ -31,8 +27,6 @@ public class IntegrationTestResource extends ExternalResource {
 
     private Connection connection = null;
 
-    private DbExecutionContext dbExecutionContext = null;
-
     @Override
     protected void before() throws Throwable {
 
@@ -41,7 +35,6 @@ public class IntegrationTestResource extends ExternalResource {
         final DataSource dataSource = container.getComponentByName("dataSource");
 
         connection = dataSource.getConnection();
-        dbExecutionContext = new DbExecutionContext(new BasicDbConnection(connection), new OracleDialect(), TransactionContext.DEFAULT_TRANSACTION_CONTEXT_KEY);
         createBatchOutputTable();
         createBatchStatus();
     }
@@ -182,7 +175,7 @@ public class IntegrationTestResource extends ExternalResource {
     public SqlResultSet findBatchOutputTable() throws Exception {
         final PreparedStatement statement = connection.prepareStatement("select * from batch_output order by id");
         final ResultSet rs = statement.executeQuery();
-        final SqlResultSet rows = new SqlResultSet(new ResultSetIterator(rs, null, dbExecutionContext), 0, 0);
+        final SqlResultSet rows = new SqlResultSet(new ResultSetIterator(rs, null), 0, 0);
         return rows;
     }
 
