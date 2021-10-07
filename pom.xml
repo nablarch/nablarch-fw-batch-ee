@@ -189,4 +189,40 @@
 
   </dependencies>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <systemProperties>
+            <property>
+              <!--
+              このシステムプロパティの設定が無いと、 Logback 1.1.10 以上でテストが失敗する。
+
+              Logback は 1.1.10 で LogbackServletContextListener を追加した。
+              このクラスは、サーブレットコンテナ終了時に Logback のコンテキストをクリアする機能を提供する。
+
+              本モジュールのテストには、 Arquillian を使ったテストが含まれている。
+              Arquillian を使ったテストはサーブレットコンテナを起動するが、
+              このとき LogbackServletContextListener が自動的に登録されてしまう。
+              このため、 Arquillian のテストが終了してコンテナが破棄されるときに
+              Logback のコンテキストもクリアされてしまうことになる。
+
+              すると、後続のテストで Logback 経由で出力されたログの内容をチェックしているテストが
+              軒並み失敗になるという問題が発生する。
+
+              これを回避するため、このシステムプロパティを設定している。
+              このシステムプロパティが設定されていると、 LogbackServletContextListener が
+              自動登録されるのを防ぐことができる。
+              これにより、 Logback のコンテキストがクリアされるのを防いでいる。
+              -->
+              <name>logbackDisableServletContainerInitializer</name>
+              <value>true</value>
+            </property>
+          </systemProperties>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
