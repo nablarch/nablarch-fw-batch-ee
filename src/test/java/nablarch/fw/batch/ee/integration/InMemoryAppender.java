@@ -1,16 +1,14 @@
 package nablarch.fw.batch.ee.integration;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.AppenderBase;
+import ch.qos.logback.core.encoder.Encoder;
+
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.AppenderBase;
-import ch.qos.logback.core.encoder.Encoder;
-import nablarch.core.util.FileUtil;
 
 /**
  * ログメッセージをメモリ上に保持するアペンダ
@@ -30,21 +28,11 @@ public class InMemoryAppender extends AppenderBase<ILoggingEvent> {
             LOG_MAP.put(getName(), messages);
         }
 
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        try {
-            encoder.init(out);
-            encoder.doEncode(eventObject);
-        } catch (IOException ignored) {
-        } finally {
-            FileUtil.closeQuietly(out);
-            try {
-                encoder.close();
-            } catch (IOException ignored) {
-            }
-        }
+        byte[] encodedMessage = encoder.encode(eventObject);
+        String message = new String(encodedMessage, Charset.defaultCharset());
 
-        messages.add(out.toString());
-        System.out.print(out);
+        messages.add(message);
+        System.out.print(message);
     }
 
     public static void clear() {
@@ -55,7 +43,7 @@ public class InMemoryAppender extends AppenderBase<ILoggingEvent> {
         return LOG_MAP.get(name);
     }
 
-    public void setEncoder(Encoder encoder) {
+    public void setEncoder(Encoder<ILoggingEvent> encoder) {
         this.encoder = encoder;
     }
 }
