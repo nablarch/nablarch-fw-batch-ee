@@ -30,7 +30,7 @@ public class IntegrationTestResource extends ExternalResource {
     @Override
     protected void before() throws Throwable {
 
-        final XmlComponentDefinitionLoader loader = new XmlComponentDefinitionLoader("integration-test/datasource.xml");
+        final XmlComponentDefinitionLoader loader = new XmlComponentDefinitionLoader("db-default.xml");
         final DiContainer container = new DiContainer(loader);
         final DataSource dataSource = container.getComponentByName("dataSource");
 
@@ -57,8 +57,8 @@ public class IntegrationTestResource extends ExternalResource {
      */
     private void createBatchOutputTable() throws SQLException {
         final PreparedStatement create = connection.prepareStatement("create table IF NOT EXISTS batch_output ("
-                + "id number,"
-                + "name varchar2(100),"
+                + "id numeric,"
+                + "name varchar(100),"
                 + "PRIMARY KEY (id))");
         create.execute();
         create.close();
@@ -73,7 +73,7 @@ public class IntegrationTestResource extends ExternalResource {
      */
     private void createBatchStatus() throws Exception {
         final PreparedStatement create = connection.prepareStatement("create table IF NOT EXISTS batch_status ("
-                + "job_name VARCHAR2(100),"
+                + "job_name VARCHAR(100),"
                 + "active char(1),"
                 + "PRIMARY KEY (job_name))");
         create.execute();
