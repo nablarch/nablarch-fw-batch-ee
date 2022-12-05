@@ -5,15 +5,6 @@
     xsi:schemaLocation="http://tis.co.jp/nablarch/component-configuration http://tis.co.jp/nablarch/component-configuration">
 
   <import file="manual-test/batchListeners.xml" />
-  <import file="integration-test/db.xml" />
-
-  <!-- 初期化機能の設定 -->
-  <component name="initializer" class="nablarch.core.repository.initialization.BasicApplicationInitializer">
-    <property name="initializeList">
-      <list>
-        <component-ref name="statementValueObjectCache" />
-      </list>
-    </property>
-  </component>
+  <import file="db-default.xml" />
 
 </component-configuration>
