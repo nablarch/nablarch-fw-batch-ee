@@ -1,1 +1,3 @@
 nablarch.fw.batch.ee.chunk.BaseDatabaseItemReaderTest$TestEntity
+nablarch.fw.batch.ee.integration.BatchStatus
+nablarch.fw.batch.ee.integration.BatchOutput
