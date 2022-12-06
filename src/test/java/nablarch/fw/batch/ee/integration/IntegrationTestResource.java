@@ -102,6 +102,5 @@ public class IntegrationTestResource extends ExternalResource {
         statement.setInt(1, id);
         statement.execute();
         statement.close();
-//        connection.commit();
     }
 }
