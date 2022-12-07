@@ -19,29 +19,6 @@ import java.util.concurrent.TimeUnit;
  * Java Batchの結合テストをサポートするクラス。
  */
 public class IntegrationTestResource extends ExternalResource {
-
-    private Connection connection = null;
-
-    @Override
-    protected void before() throws Throwable {
-
-        final XmlComponentDefinitionLoader loader = new XmlComponentDefinitionLoader("db-default.xml");
-        final DiContainer container = new DiContainer(loader);
-        final DataSource dataSource = container.getComponentByName("dataSource");
-
-        connection = dataSource.getConnection();
-    }
-
-    @Override
-    protected void after() {
-        if (connection != null) {
-            try {
-                connection.close();
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
     /**
      * 指定されたJOBを実行する。
      * @param jobName JOB名
@@ -95,12 +72,5 @@ public class IntegrationTestResource extends ExternalResource {
             }
         }
         return execution;
-    }
-
-    public void deleteBatchOutputTable(int id) throws Exception {
-        final PreparedStatement statement = connection.prepareStatement("delete from batch_output where id = ?");
-        statement.setInt(1, id);
-        statement.execute();
-        statement.close();
     }
 }

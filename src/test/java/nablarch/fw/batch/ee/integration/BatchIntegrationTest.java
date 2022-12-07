@@ -324,7 +324,7 @@ public class BatchIntegrationTest {
         ));
 
         // -------------------------------------------------- clear abnormal data
-        resource.deleteBatchOutputTable(18);
+        deleteBatchOutputTable(18);
         InMemoryAppender.clear();
 
         // -------------------------------------------------- restart batch job
@@ -1318,6 +1318,12 @@ public class BatchIntegrationTest {
 
     private static void insertBatchOutputTable(int id) {
         VariousDbTestHelper.insert(new BatchOutput(id, "data_" + id));
+    }
+
+    private static void deleteBatchOutputTable(int id) {
+        VariousDbTestHelper.delete(
+                VariousDbTestHelper.findById(BatchOutput.class, id)
+        );
     }
 
     private void updateBatchStatus(String jobName, String activeFlag){
