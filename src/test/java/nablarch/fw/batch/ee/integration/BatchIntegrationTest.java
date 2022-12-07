@@ -1,11 +1,39 @@
 package nablarch.fw.batch.ee.integration;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertThat;
+import mockit.Deencapsulation;
+import nablarch.common.dao.UniversalDao;
+import nablarch.core.repository.ObjectLoader;
+import nablarch.core.repository.SystemRepository;
+import nablarch.core.repository.di.DiContainer;
+import nablarch.core.repository.di.config.xml.XmlComponentDefinitionLoader;
+import nablarch.fw.batch.ee.JobExecutor;
+import nablarch.fw.batch.ee.initializer.RepositoryInitializer;
+import nablarch.fw.batch.ee.integration.app.FileWriter;
+import nablarch.fw.batch.ee.integration.app.RegisterBatchOutputTable;
+import nablarch.fw.batch.ee.integration.app.ThrowErrorWriter;
+import nablarch.test.support.db.helper.VariousDbTestHelper;
+import org.hamcrest.Matchers;
+import org.jboss.arquillian.container.test.api.Deployment;
+import org.jboss.arquillian.container.test.api.RunAsClient;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.test.api.ArquillianResource;
+import org.jboss.shrinkwrap.api.ArchivePath;
+import org.jboss.shrinkwrap.api.Filter;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
+import javax.batch.runtime.BatchStatus;
+import javax.batch.runtime.JobExecution;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.Response;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -22,41 +50,14 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.logging.LogManager;
 
-import javax.batch.runtime.BatchStatus;
-import javax.batch.runtime.JobExecution;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.core.Response;
-
-import org.hamcrest.Matchers;
-import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.container.test.api.RunAsClient;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.arquillian.test.api.ArquillianResource;
-import org.jboss.shrinkwrap.api.ArchivePath;
-import org.jboss.shrinkwrap.api.Filter;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.slf4j.bridge.SLF4JBridgeHandler;
-
-import nablarch.core.db.statement.SqlResultSet;
-import nablarch.core.db.statement.SqlRow;
-import nablarch.core.repository.ObjectLoader;
-import nablarch.core.repository.SystemRepository;
-import nablarch.fw.batch.ee.JobExecutor;
-import nablarch.fw.batch.ee.initializer.RepositoryInitializer;
-import nablarch.fw.batch.ee.integration.app.FileWriter;
-import nablarch.fw.batch.ee.integration.app.RegisterBatchOutputTable;
-import nablarch.fw.batch.ee.integration.app.ThrowErrorWriter;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
-
-import mockit.Deencapsulation;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.CoreMatchers.startsWith;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertThat;
 
 /**
  * Java Batchの結合テスト。
@@ -97,6 +98,10 @@ public class BatchIntegrationTest {
                                 + "org.slf4j.bridge.SLF4JBridgeHandler.level=FINEST\n"
                                 + "org.slf4j.bridge.SLF4JBridgeHandler.formatter=java.util.logging.SimpleFormatter\n").getBytes()));
 
+        DiContainer container = new DiContainer(new XmlComponentDefinitionLoader("db-default.xml"));
+        VariousDbTestHelper.initialize(container);
+        VariousDbTestHelper.createTable(BatchOutput.class);
+        VariousDbTestHelper.createTable(nablarch.fw.batch.ee.integration.BatchStatus.class);
     }
 
     @Before
@@ -107,6 +112,22 @@ public class BatchIntegrationTest {
         ThrowErrorWriter.errorId = -1;
         ThrowErrorWriter.retryError = Collections.emptySet();
         InMemoryAppender.clear();
+
+        setUpTestData();
+    }
+
+    private static void setUpTestData() {
+        clearBatchOutputTable();
+        VariousDbTestHelper.delete(nablarch.fw.batch.ee.integration.BatchStatus.class);
+        VariousDbTestHelper.setUpTable(
+                new nablarch.fw.batch.ee.integration.BatchStatus("batchlet-integration-test", "0")
+                ,new nablarch.fw.batch.ee.integration.BatchStatus("chunk-integration-test", "0")
+                ,new nablarch.fw.batch.ee.integration.BatchStatus("operator-batchlet-test", "0")
+                ,new nablarch.fw.batch.ee.integration.BatchStatus("operator-chunk-test", "0")
+                ,new nablarch.fw.batch.ee.integration.BatchStatus("step-scoped-integration-test", "0")
+                ,new nablarch.fw.batch.ee.integration.BatchStatus("specified-steplevel-listener-test", "0")
+                ,new nablarch.fw.batch.ee.integration.BatchStatus("specified-joblevel-listener-test", "0")
+        );
     }
 
     @After
@@ -126,25 +147,25 @@ public class BatchIntegrationTest {
     public void executeBatchlet_Success() throws Exception {
 
         // -------------------------------------------------- clear output table
-        resource.clearBatchOutputTable();
+        clearBatchOutputTable();
 
         // -------------------------------------------------- execute batch job
         final JobExecution execution = resource.startJob("batchlet-integration-test");
         assertThat("バッチ処理が正常に終わっていること", execution.getBatchStatus(), is(BatchStatus.COMPLETED));
 
         // -------------------------------------------------- assert output table
-        final SqlResultSet rs = resource.findBatchOutputTable();
-        assertThat("10レコード登録されるはず", rs.size(), is(10));
+        List<BatchOutput> batchOutputs = findBatchOutputTable();
+        assertThat("10レコード登録されるはず", batchOutputs.size(), is(10));
         for (int i = 0; i < 10; i++) {
             int index = i + 1;
-            final SqlRow row = rs.get(i);
-            assertThat(row.getInteger("id"), is(index));
-            assertThat(row.getString("name"), is("name_" + index));
+            BatchOutput output = batchOutputs.get(i);
+            assertThat(output.id, is(index));
+            assertThat(output.name, is("name_" + index));
         }
 
         // -------------------------------------------------- assert batch status
         assertThat("バッチが終了したので非アクティブになっていること",
-                resource.findBatchStatus("batchlet-integration-test"), is("0"));
+                findBatchStatus("batchlet-integration-test").active, is("0"));
     }
 
     /**
@@ -159,10 +180,10 @@ public class BatchIntegrationTest {
     public void executeBatchlet_Failed() throws Exception {
 
         // -------------------------------------------------- clear output table
-        resource.clearBatchOutputTable();
+        clearBatchOutputTable();
 
         // -------------------------------------------------- add initial data
-        resource.insertBatchOutputTable(9);
+        insertBatchOutputTable(9);
 
         // -------------------------------------------------- execute batch job
         final JobExecution execution = resource.startJob("batchlet-integration-test");
@@ -172,14 +193,13 @@ public class BatchIntegrationTest {
         assertThat("Batchletは実行されていること", RegisterBatchOutputTable.processExecuteFlag, is(true));
 
         // -------------------------------------------------- assert output table
-        final SqlResultSet rs = resource.findBatchOutputTable();
-        assertThat(rs.size(), is(1));
-        assertThat("初期データが存在する。", rs.get(0)
-                .getInteger("id"), is(9));
+        List<BatchOutput> batchOutputs = findBatchOutputTable();
+        assertThat(batchOutputs.size(), is(1));
+        assertThat("初期データが存在する。", batchOutputs.get(0).id, is(9));
 
         // -------------------------------------------------- assert batch status
         assertThat("異常終了でもステータスは非アクティブに変更されること",
-                resource.findBatchStatus("batchlet-integration-test"), is("0"));
+                findBatchStatus("batchlet-integration-test").active, is("0"));
     }
 
     /**
@@ -193,15 +213,14 @@ public class BatchIntegrationTest {
     @Test
     public void executeBatch_throwError() throws Exception {
         // -------------------------------------------------- clear output table
-        resource.clearBatchOutputTable();
+        clearBatchOutputTable();
 
         // -------------------------------------------------- assert execute batchlet?
         final JobExecution execution = resource.startJob("batchlet-error-integration-test");
         assertThat("異常終了していること", execution.getBatchStatus(), is(BatchStatus.FAILED));
 
         // -------------------------------------------------- assert output table
-        assertThat("レコードは登録されていないこと", resource.findBatchOutputTable()
-                .isEmpty(), is(true));
+        assertThat("レコードは登録されていないこと", findBatchOutputTable().isEmpty(), is(true));
 
     }
 
@@ -216,21 +235,21 @@ public class BatchIntegrationTest {
     @Test
     public void executeChunk_Success() throws Exception {
         // -------------------------------------------------- clear output table
-        resource.clearBatchOutputTable();
+        clearBatchOutputTable();
 
         // -------------------------------------------------- execute batch job
         final JobExecution execution = resource.startJob("chunk-integration-test");
         assertThat("バッチ処理が正常に終わっていること", execution.getBatchStatus(), is(BatchStatus.COMPLETED));
 
         // -------------------------------------------------- assert batch output table
-        final SqlResultSet rs = resource.findBatchOutputTable();
-        assertThat("25レコード登録されていること", rs.size(), is(25));
+        List<BatchOutput> batchOutputs = findBatchOutputTable();
+        assertThat("25レコード登録されていること", batchOutputs.size(), is(25));
 
         for (int i = 0; i < 25; i++) {
             int index = i + 1;
-            final SqlRow row = rs.get(i);
-            assertThat(row.getInteger("id"), is(index));
-            assertThat(row.getString("name"), is("name_" + index));
+            BatchOutput output = batchOutputs.get(i);
+            assertThat(output.id, is(index));
+            assertThat(output.name, is("name_" + index));
         }
 
         List<String> messages = InMemoryAppender.getLogMessages("PROGRESS");
@@ -277,16 +296,16 @@ public class BatchIntegrationTest {
     @Test
     public void executeChunk_Failed() throws Exception {
         // -------------------------------------------------- setup output table
-        resource.clearBatchOutputTable();
-        resource.insertBatchOutputTable(18);
+        clearBatchOutputTable();
+        insertBatchOutputTable(18);
 
         // -------------------------------------------------- execute batch job
         final JobExecution execution = resource.startJob("chunk-integration-test");
         assertThat("バッチ処理が異常終了していること", execution.getBatchStatus(), is(BatchStatus.FAILED));
 
         // -------------------------------------------------- assert output table
-        final SqlResultSet rs = resource.findBatchOutputTable();
-        assertThat("障害発生原因のレコード + 登録した10レコードが登録されているはず", rs.size(), is(11));
+        List<BatchOutput> batchOutputs = findBatchOutputTable();
+        assertThat("障害発生原因のレコード + 登録した10レコードが登録されているはず", batchOutputs.size(), is(11));
 
         List<String> messages = InMemoryAppender.getLogMessages("PROGRESS");
         assertThat(messages, contains(
@@ -305,7 +324,7 @@ public class BatchIntegrationTest {
         ));
 
         // -------------------------------------------------- clear abnormal data
-        resource.deleteBatchOutputTable(18);
+        deleteBatchOutputTable(18);
         InMemoryAppender.clear();
 
         // -------------------------------------------------- restart batch job
@@ -313,13 +332,13 @@ public class BatchIntegrationTest {
         assertThat("再開後はJOBが正常に終了すること", restartExecution.getBatchStatus(), is(BatchStatus.COMPLETED));
 
         // -------------------------------------------------- assert output table
-        final SqlResultSet restartResult = resource.findBatchOutputTable();
-        assertThat("処理対象の25レコード全てが登録されていること", restartResult.size(), is(25));
+        List<BatchOutput> restartedBatchOutputs = findBatchOutputTable();
+        assertThat("処理対象の25レコード全てが登録されていること", restartedBatchOutputs.size(), is(25));
         for (int i = 0; i < 25; i++) {
             int index = i + 1;
-            final SqlRow row = restartResult.get(i);
-            assertThat(row.getInteger("id"), is(index));
-            assertThat(row.getString("name"), is("name_" + index));
+            BatchOutput output = restartedBatchOutputs.get(i);
+            assertThat(output.id, is(index));
+            assertThat(output.name, is("name_" + index));
         }
 
         messages = InMemoryAppender.getLogMessages("PROGRESS");
@@ -359,7 +378,7 @@ public class BatchIntegrationTest {
     @Test
     public void executeChunk_ThrowError() throws Exception {
         // -------------------------------------------------- setup output table
-        resource.clearBatchOutputTable();
+        clearBatchOutputTable();
 
         // -------------------------------------------------- set error id
         ThrowErrorWriter.errorId = 25;
@@ -369,12 +388,10 @@ public class BatchIntegrationTest {
         assertThat("バッチ処理が異常終了すること", execution.getBatchStatus(), is(BatchStatus.FAILED));
 
         // -------------------------------------------------- assert output table
-        final SqlResultSet rs = resource.findBatchOutputTable();
-        assertThat("2つのChunkでスキップ対象例外が発生するので、最後のChunkのデータだけ登録される", rs.size(), is(20));
-        assertThat("最初のレコードのID:1", rs.get(0)
-                .getInteger("id"), is(1));
-        assertThat("最後のレコードのID:20", rs.get(19)
-                .getInteger("id"), is(20));
+        List<BatchOutput> batchOutputs = findBatchOutputTable();
+        assertThat("2つのChunkでスキップ対象例外が発生するので、最後のChunkのデータだけ登録される", batchOutputs.size(), is(20));
+        assertThat("最初のレコードのID:1", batchOutputs.get(0).id, is(1));
+        assertThat("最後のレコードのID:20", batchOutputs.get(19).id, is(20));
     }
 
     /**
@@ -388,7 +405,7 @@ public class BatchIntegrationTest {
     @Test
     public void executeChunk_Skip() throws Exception {
         // -------------------------------------------------- setup output table
-        resource.clearBatchOutputTable();
+        clearBatchOutputTable();
 
         // -------------------------------------------------- set error id
         ThrowErrorWriter.skipIds = new int[] {10, 19};
@@ -398,12 +415,10 @@ public class BatchIntegrationTest {
         assertThat("バッチ処理は正常に終了すること", execution.getBatchStatus(), is(BatchStatus.COMPLETED));
 
         // -------------------------------------------------- assert output table
-        final SqlResultSet rs = resource.findBatchOutputTable();
-        assertThat("2つのChunkでスキップ対象例外が発生するので、最後のChunkのデータだけ登録される", rs.size(), is(29));
-        assertThat("最初のレコードのIDは21", rs.get(0)
-                .getInteger("id"), is(21));
-        assertThat("最後のレコードのIDは49", rs.get(28)
-                .getInteger("id"), is(49));
+        List<BatchOutput> batchOutputs = findBatchOutputTable();
+        assertThat("2つのChunkでスキップ対象例外が発生するので、最後のChunkのデータだけ登録される", batchOutputs.size(), is(29));
+        assertThat("最初のレコードのIDは21", batchOutputs.get(0).id, is(21));
+        assertThat("最後のレコードのIDは49", batchOutputs.get(28).id, is(49));
     }
 
     /**
@@ -418,7 +433,7 @@ public class BatchIntegrationTest {
     @Test
     public void executeChunk_SkipLimit() throws Exception {
         // -------------------------------------------------- setup output table
-        resource.clearBatchOutputTable();
+        clearBatchOutputTable();
 
         // -------------------------------------------------- set error id
         ThrowErrorWriter.skipIds = new int[] {10, 19, 39};
@@ -428,12 +443,10 @@ public class BatchIntegrationTest {
         assertThat("スキップのリミット突破でJOBは異常終了する ", execution.getBatchStatus(), is(BatchStatus.FAILED));
 
         // -------------------------------------------------- assert output table
-        final SqlResultSet rs = resource.findBatchOutputTable();
-        assertThat("正常に処理できたChunkのデータのみ存在する", rs.size(), is(10));
-        assertThat("最初のデータはID:21", rs.get(0)
-                .getInteger("id"), is(21));
-        assertThat("最後のデータはID:30", rs.get(9)
-                .getInteger("id"), is(30));
+        List<BatchOutput> batchOutputs = findBatchOutputTable();
+        assertThat("正常に処理できたChunkのデータのみ存在する", batchOutputs.size(), is(10));
+        assertThat("最初のデータはID:21", batchOutputs.get(0).id, is(21));
+        assertThat("最後のデータはID:30", batchOutputs.get(9).id, is(30));
     }
 
     /**
@@ -447,7 +460,7 @@ public class BatchIntegrationTest {
     @Test
     public void executeChunk_Retry() throws Exception {
         // -------------------------------------------------- setup output table
-        resource.clearBatchOutputTable();
+        clearBatchOutputTable();
 
         // -------------------------------------------------- set error id
         ThrowErrorWriter.retryError = new HashSet<Integer>(Arrays.asList(25));
@@ -457,12 +470,12 @@ public class BatchIntegrationTest {
         assertThat("正常に終了すること", execution.getBatchStatus(), is(BatchStatus.COMPLETED));
 
         // -------------------------------------------------- assert output table
-        final SqlResultSet rs = resource.findBatchOutputTable();
-        assertThat("リトライが実行されすべて正常に登録される", rs.size(), is(49));
+        List<BatchOutput> batchOutputs = findBatchOutputTable();
+        assertThat("リトライが実行されすべて正常に登録される", batchOutputs.size(), is(49));
         for (int i = 0; i < 49; i++) {
             int index = i + 1;
-            final SqlRow row = rs.get(i);
-            assertThat(row.getInteger("id"), is(index));
+            BatchOutput output = batchOutputs.get(i);
+            assertThat(output.id, is(index));
         }
     }
 
@@ -477,7 +490,7 @@ public class BatchIntegrationTest {
     @Test
     public void executeChunk_RetryLimit() throws Exception {
         // -------------------------------------------------- setup output table
-        resource.clearBatchOutputTable();
+        clearBatchOutputTable();
 
         // -------------------------------------------------- set error id
         ThrowErrorWriter.retryError = new HashSet<Integer>(Arrays.asList(25, 41));
@@ -487,13 +500,13 @@ public class BatchIntegrationTest {
         assertThat("リトライリミット突破でJOBは異常終了する", execution.getBatchStatus(), is(BatchStatus.FAILED));
 
         // -------------------------------------------------- assert output table
-        final SqlResultSet rs = resource.findBatchOutputTable();
+        List<BatchOutput> batchOutputs = findBatchOutputTable();
         assertThat("リトライ上限突破で、最後にリトライ対象エラーがでたChunkの前までが登録される",
-                rs.size(), is(40));
+                batchOutputs.size(), is(40));
         for (int i = 0; i < 40; i++) {
             int index = i + 1;
-            final SqlRow row = rs.get(i);
-            assertThat(row.getInteger("id"), is(index));
+            BatchOutput output = batchOutputs.get(i);
+            assertThat(output.id, is(index));
         }
     }
 
@@ -515,19 +528,19 @@ public class BatchIntegrationTest {
         FileWriter.outputPath = outputFile;
 
         // -------------------------------------------------- setup output table
-        resource.clearBatchOutputTable();
+        clearBatchOutputTable();
 
         // -------------------------------------------------- execute batch job
         final JobExecution execution = resource.startJob("multi-step-integration-test");
         assertThat("正常に終了すること", execution.getBatchStatus(), is(BatchStatus.COMPLETED));
 
         // -------------------------------------------------- assert output table
-        final SqlResultSet rs = resource.findBatchOutputTable();
-        assertThat("Batchletでデータが登録できていること", rs.size(), is(10));
+        List<BatchOutput> batchOutputs = findBatchOutputTable();
+        assertThat("Batchletでデータが登録できていること", batchOutputs.size(), is(10));
         for (int i = 0; i < 10; i++) {
             int index = i + 1;
-            final SqlRow row = rs.get(i);
-            assertThat(row.getInteger("id"), is(index));
+            BatchOutput output = batchOutputs.get(i);
+            assertThat(output.id, is(index));
         }
 
         // -------------------------------------------------- assert output file
@@ -585,7 +598,7 @@ public class BatchIntegrationTest {
         FileWriter.outputPath = null;
 
         // -------------------------------------------------- setup output table
-        resource.clearBatchOutputTable();
+        clearBatchOutputTable();
 
         // -------------------------------------------------- execute batch job
         final JobExecution execution = resource.startJob("multi-step-integration-test");
@@ -593,12 +606,12 @@ public class BatchIntegrationTest {
                 execution.getBatchStatus(), is(BatchStatus.FAILED));
 
         // -------------------------------------------------- assert output table
-        final SqlResultSet rs = resource.findBatchOutputTable();
-        assertThat("Batchletでデータが登録できていること", rs.size(), is(10));
+        List<BatchOutput> batchOutputs = findBatchOutputTable();
+        assertThat("Batchletでデータが登録できていること", batchOutputs.size(), is(10));
         for (int i = 0; i < 10; i++) {
             int index = i + 1;
-            final SqlRow row = rs.get(i);
-            assertThat(row.getInteger("id"), is(index));
+            BatchOutput output = batchOutputs.get(i);
+            assertThat(output.id, is(index));
         }
 
         // -------------------------------------------------- assert output table
@@ -675,10 +688,10 @@ public class BatchIntegrationTest {
     @Test
     public void executeJob_DuplicatedExecuteJob() throws Exception {
         // -------------------------------------------------- clear output table
-        resource.clearBatchOutputTable();
+        clearBatchOutputTable();
 
         // -------------------------------------------------- update job active
-        resource.updateBatchStatus("batchlet-integration-test", "1");
+        updateBatchStatus("batchlet-integration-test", "1");
 
         // -------------------------------------------------- execute batch job
         final JobExecution execution = resource.startJob("batchlet-integration-test");
@@ -689,22 +702,21 @@ public class BatchIntegrationTest {
         assertThat("Batchletは実行されていないこと", RegisterBatchOutputTable.processExecuteFlag, is(false));
 
         // -------------------------------------------------- assert output table
-        final SqlResultSet rs = resource.findBatchOutputTable();
-        assertThat("Batchletは実行されないので何も登録されない", rs.isEmpty(), is(true));
+        List<BatchOutput> batchOutputs = findBatchOutputTable();
+        assertThat("Batchletは実行されないので何も登録されない", batchOutputs.isEmpty(), is(true));
 
         // -------------------------------------------------- assert batch status
         assertThat("バッチの状態は活性のままであること(0にはならないこと)",
-                resource.findBatchStatus("batchlet-integration-test"), is("1"));
+                findBatchStatus("batchlet-integration-test").active, is("1"));
 
         // -------------------------------------------------- change active status
-        resource.updateBatchStatus("batchlet-integration-test", "0");
+        updateBatchStatus("batchlet-integration-test", "0");
 
         // -------------------------------------------------- restart job
         final JobExecution restartExecution = resource.restartJob(execution.getExecutionId());
         assertThat("リスタートには成功する。", restartExecution.getBatchStatus(), is(BatchStatus.COMPLETED));
         assertThat("バッチレットでデータが登録できているはず",
-                resource.findBatchOutputTable()
-                        .size(), is(10));
+                findBatchOutputTable().size(), is(10));
     }
 
     /**
@@ -717,18 +729,15 @@ public class BatchIntegrationTest {
      */
     @Test
     public void executeChunk_ItemWriteListenerErrorOnBeforeWrite() throws Exception {
-
         // -------------------------------------------------- clear output table
-        resource.clearBatchOutputTable();
+        clearBatchOutputTable();
 
         // -------------------------------------------------- execute batch job
         final JobExecution execution = resource.startJob("item-write-listener-error-on-before-write-test");
         assertThat("異常終了していること", execution.getBatchStatus(), is(BatchStatus.FAILED));
 
         // -------------------------------------------------- assert output table
-        final SqlResultSet rs = resource.findBatchOutputTable();
-        assertThat("レコードは登録されていないこと", resource.findBatchOutputTable()
-                .isEmpty(), is(true));
+        assertThat("レコードは登録されていないこと", findBatchOutputTable().isEmpty(), is(true));
     }
 
     /**
@@ -741,18 +750,15 @@ public class BatchIntegrationTest {
      */
     @Test
     public void executeChunk_ItemWriteListenerErrorOnAfterWrite() throws Exception {
-
         // -------------------------------------------------- clear output table
-        resource.clearBatchOutputTable();
+        clearBatchOutputTable();
 
         // -------------------------------------------------- execute batch job
         final JobExecution execution = resource.startJob("item-write-listener-error-on-after-write-test");
         assertThat("異常終了していること", execution.getBatchStatus(), is(BatchStatus.FAILED));
 
         // -------------------------------------------------- assert output table
-        final SqlResultSet rs = resource.findBatchOutputTable();
-        assertThat("レコードは登録されていないこと", resource.findBatchOutputTable()
-                .isEmpty(), is(true));
+        assertThat("レコードは登録されていないこと", findBatchOutputTable().isEmpty(), is(true));
     }
 
     /**
@@ -766,15 +772,14 @@ public class BatchIntegrationTest {
     @Test
     public void executeBatch_StepListenerErrorOnBeforeStep() throws Exception {
         // -------------------------------------------------- clear output table
-        resource.clearBatchOutputTable();
+        clearBatchOutputTable();
 
         // -------------------------------------------------- assert execute batchlet?
         final JobExecution execution = resource.startJob("step-listener-error-on-before-step-test");
         assertThat("異常終了していること", execution.getBatchStatus(), is(BatchStatus.FAILED));
 
         // -------------------------------------------------- assert output table
-        assertThat("レコードは登録されていないこと", resource.findBatchOutputTable()
-                .isEmpty(), is(true));
+        assertThat("レコードは登録されていないこと", findBatchOutputTable().isEmpty(), is(true));
     }
 
     /**
@@ -788,15 +793,14 @@ public class BatchIntegrationTest {
     @Test
     public void executeBatch_StepListenerErrorOnAfterStep() throws Exception {
         // -------------------------------------------------- clear output table
-        resource.clearBatchOutputTable();
+        clearBatchOutputTable();
 
         // -------------------------------------------------- assert execute batchlet?
         final JobExecution execution = resource.startJob("step-listener-error-on-after-step-test");
         assertThat("異常終了していること", execution.getBatchStatus(), is(BatchStatus.FAILED));
 
         // -------------------------------------------------- assert output table
-        assertThat("レコードは登録されていないこと", resource.findBatchOutputTable()
-                .isEmpty(), is(true));
+        assertThat("レコードは登録されていないこと", findBatchOutputTable().isEmpty(), is(true));
     }
 
     /**
@@ -812,14 +816,14 @@ public class BatchIntegrationTest {
     public void executeChunk_ItemWriteListenerErrorOnAfterWrite_Restart() throws Exception {
 
         // -------------------------------------------------- clear output table
-        resource.clearBatchOutputTable();
+        clearBatchOutputTable();
 
         // -------------------------------------------------- execute batch job
         final JobExecution prevExecution = resource.startJob("item-write-listener-error-on-after-write-test");
         assertThat("異常終了していること", prevExecution.getBatchStatus(), is(BatchStatus.FAILED));
 
         // -------------------------------------------------- assert output table
-        assertThat("レコードは登録されていないこと", resource.findBatchOutputTable().isEmpty(), is(true));
+        assertThat("レコードは登録されていないこと", findBatchOutputTable().isEmpty(), is(true));
 
         // 正常なリストに入れ替えます。
         final List<?> listeners = SystemRepository.get("itemWriteListeners");
@@ -838,14 +842,14 @@ public class BatchIntegrationTest {
         assertThat("バッチ処理が正常に終わっていること", execution.getBatchStatus(), is(BatchStatus.COMPLETED));
 
         // -------------------------------------------------- assert batch output table
-        final SqlResultSet rs = resource.findBatchOutputTable();
-        assertThat("25レコード登録されていること", rs.size(), is(15));
+        List<BatchOutput> batchOutputs = findBatchOutputTable();
+        assertThat("15レコード登録されていること", batchOutputs.size(), is(15));
 
         for (int i = 0; i < 15; i++) {
             int index = i + 1;
-            final SqlRow row = rs.get(i);
-            assertThat(row.getInteger("id"), is(index));
-            assertThat(row.getString("name"), is("name_" + index));
+            BatchOutput output = batchOutputs.get(i);
+            assertThat(output.id, is(index));
+            assertThat(output.name, is("name_" + index));
         }
     }
 
@@ -856,7 +860,7 @@ public class BatchIntegrationTest {
     public void testProgressLog_Success() throws Exception {
 
         // -------------------------------------------------- clear output table
-        resource.clearBatchOutputTable();
+        clearBatchOutputTable();
 
         // -------------------------------------------------- execute batch job
         resource.startJob("batchlet-integration-test");
@@ -889,10 +893,10 @@ public class BatchIntegrationTest {
     public void testProgressLog_Failed() throws Exception {
 
         // -------------------------------------------------- clear output table
-        resource.clearBatchOutputTable();
+        clearBatchOutputTable();
 
         // -------------------------------------------------- add initial data
-        resource.insertBatchOutputTable(9);
+        insertBatchOutputTable(9);
 
         // -------------------------------------------------- execute batch job
         resource.startJob("batchlet-integration-test");
@@ -921,7 +925,7 @@ public class BatchIntegrationTest {
         FileWriter.outputPath = outputFile;
 
         // -------------------------------------------------- setup output table
-        resource.clearBatchOutputTable();
+        clearBatchOutputTable();
 
         // -------------------------------------------------- execute batch job
         resource.startJob("multi-step-integration-with-job-listener-test");
@@ -966,7 +970,7 @@ public class BatchIntegrationTest {
         FileWriter.outputPath = null;
 
         // -------------------------------------------------- setup output table
-        resource.clearBatchOutputTable();
+        clearBatchOutputTable();
 
         // -------------------------------------------------- execute batch job
         final JobExecution execution = resource.startJob("multi-step-integration-with-job-listener-test");
@@ -1023,7 +1027,7 @@ public class BatchIntegrationTest {
     public void testProgressLogChunk() throws Exception {
 
         // -------------------------------------------------- clear output table
-        resource.clearBatchOutputTable();
+        clearBatchOutputTable();
 
         // -------------------------------------------------- execute batch job
         resource.startJob("chunk-integration-test");
@@ -1066,7 +1070,7 @@ public class BatchIntegrationTest {
     public void testOperationLogBatchlet() throws Exception {
 
         // -------------------------------------------------- clear output table
-        resource.clearBatchOutputTable();
+        clearBatchOutputTable();
 
         // -------------------------------------------------- execute batch job
         JobExecution execution = resource.startJob("operator-batchlet-test");
@@ -1093,7 +1097,7 @@ public class BatchIntegrationTest {
     public void testOperationLogChunk() throws Exception {
 
         // -------------------------------------------------- clear output table
-        resource.clearBatchOutputTable();
+        clearBatchOutputTable();
 
         // -------------------------------------------------- execute batch job
         JobExecution execution = resource.startJob("operator-chunk-test");
@@ -1120,7 +1124,7 @@ public class BatchIntegrationTest {
     public void testSystemError() throws Exception {
 
         // -------------------------------------------------- clear output table
-        resource.clearBatchOutputTable();
+        clearBatchOutputTable();
 
         // -------------------------------------------------- execute batch job
         JobExecution execution = resource.startJob("batchlet-error-integration-test");
@@ -1302,6 +1306,33 @@ public class BatchIntegrationTest {
         assertThat("LoggingStepLevelListenerの実行結果がログ出力されていること",
                 InMemoryAppender.getLogMessages("ALL"), Matchers.<String>hasItem(allOf(
                         containsString("LoggingStepLevelListener is executed on step2"))));
+    }
+
+    private static void clearBatchOutputTable() {
+        VariousDbTestHelper.delete(BatchOutput.class);
+    }
+
+    private static List<BatchOutput> findBatchOutputTable() {
+        return VariousDbTestHelper.findAll(BatchOutput.class, "id");
+    }
+
+    private static void insertBatchOutputTable(int id) {
+        VariousDbTestHelper.insert(new BatchOutput(id, "data_" + id));
+    }
+
+    private static void deleteBatchOutputTable(int id) {
+        VariousDbTestHelper.delete(
+                VariousDbTestHelper.findById(BatchOutput.class, id)
+        );
+    }
+
+    private void updateBatchStatus(String jobName, String activeFlag){
+        VariousDbTestHelper.update(new nablarch.fw.batch.ee.integration.BatchStatus(jobName, activeFlag));
+    }
+
+    private static nablarch.fw.batch.ee.integration.BatchStatus findBatchStatus(String jobName) {
+        return VariousDbTestHelper.findById(
+                nablarch.fw.batch.ee.integration.BatchStatus.class, jobName);
     }
 }
 
