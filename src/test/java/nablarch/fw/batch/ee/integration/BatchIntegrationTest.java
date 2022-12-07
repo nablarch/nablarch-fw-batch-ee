@@ -843,7 +843,7 @@ public class BatchIntegrationTest {
 
         // -------------------------------------------------- assert batch output table
         List<BatchOutput> batchOutputs = findBatchOutputTable();
-        assertThat("25レコード登録されていること", batchOutputs.size(), is(15));
+        assertThat("15レコード登録されていること", batchOutputs.size(), is(15));
 
         for (int i = 0; i < 15; i++) {
             int index = i + 1;
