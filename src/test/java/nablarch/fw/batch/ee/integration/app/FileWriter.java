@@ -8,9 +8,9 @@ import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.util.List;
 
-import javax.batch.api.chunk.AbstractItemWriter;
-import javax.enterprise.context.Dependent;
-import javax.inject.Named;
+import jakarta.batch.api.chunk.AbstractItemWriter;
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Named;
 
 /**
  * ファイルに出力する。

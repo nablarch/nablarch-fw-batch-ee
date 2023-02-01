@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.batch.runtime.context.JobContext;
+import jakarta.batch.runtime.context.JobContext;
 
 import mockit.Expectations;
 import nablarch.core.repository.ObjectLoader;

@@ -7,10 +7,10 @@ import static org.junit.Assert.assertNull;
 
 import java.util.Properties;
 
-import javax.batch.operations.JobOperator;
-import javax.batch.runtime.BatchRuntime;
-import javax.batch.runtime.BatchStatus;
-import javax.batch.runtime.JobExecution;
+import jakarta.batch.operations.JobOperator;
+import jakarta.batch.runtime.BatchRuntime;
+import jakarta.batch.runtime.BatchStatus;
+import jakarta.batch.runtime.JobExecution;
 
 import mockit.Mock;
 import org.junit.Rule;

@@ -8,9 +8,9 @@ import static org.junit.Assert.fail;
 import java.util.Arrays;
 import java.util.Collection;
 
-import javax.batch.runtime.BatchStatus;
-import javax.batch.runtime.context.JobContext;
-import javax.batch.runtime.context.StepContext;
+import jakarta.batch.runtime.BatchStatus;
+import jakarta.batch.runtime.context.JobContext;
+import jakarta.batch.runtime.context.StepContext;
 
 import nablarch.core.repository.SystemRepository;
 import nablarch.core.transaction.Transaction;

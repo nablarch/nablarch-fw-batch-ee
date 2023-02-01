@@ -4,7 +4,7 @@ import nablarch.fw.batch.ee.listener.NablarchListenerContext;
 import nablarch.fw.handler.AlreadyProcessRunningException;
 import nablarch.fw.handler.DuplicateProcessChecker;
 
-import javax.batch.operations.BatchRuntimeException;
+import jakarta.batch.operations.BatchRuntimeException;
 
 /**
  * 同一ジョブが同時に複数実行されないことを保証するための{@link NablarchJobListener}実装クラス。

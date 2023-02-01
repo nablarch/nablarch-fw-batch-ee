@@ -1,10 +1,10 @@
 package nablarch.fw.batch.ee.listener;
 
-import javax.batch.runtime.BatchStatus;
-import javax.batch.runtime.Metric;
-import javax.batch.runtime.Metric.MetricType;
-import javax.batch.runtime.context.JobContext;
-import javax.batch.runtime.context.StepContext;
+import jakarta.batch.runtime.BatchStatus;
+import jakarta.batch.runtime.Metric;
+import jakarta.batch.runtime.Metric.MetricType;
+import jakarta.batch.runtime.context.JobContext;
+import jakarta.batch.runtime.context.StepContext;
 
 import nablarch.core.util.annotation.Published;
 

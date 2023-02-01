@@ -1,8 +1,8 @@
 package nablarch.fw.batch.ee.integration.app;
 
-import javax.batch.api.AbstractBatchlet;
-import javax.enterprise.context.Dependent;
-import javax.inject.Named;
+import jakarta.batch.api.AbstractBatchlet;
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Named;
 
 /**
  * 何もしないBatchlet

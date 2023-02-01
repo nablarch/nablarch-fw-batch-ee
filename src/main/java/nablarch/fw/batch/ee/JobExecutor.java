@@ -4,10 +4,10 @@ import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 
-import javax.batch.operations.JobOperator;
-import javax.batch.runtime.BatchRuntime;
-import javax.batch.runtime.BatchStatus;
-import javax.batch.runtime.JobExecution;
+import jakarta.batch.operations.JobOperator;
+import jakarta.batch.runtime.BatchRuntime;
+import jakarta.batch.runtime.BatchStatus;
+import jakarta.batch.runtime.JobExecution;
 
 /**
  * JOB の実行をするクラス
@@ -21,7 +21,7 @@ import javax.batch.runtime.JobExecution;
  * なお、JOBの終了待ちの間に中断された場合は、異常終了のコードを返す。
  * <p/>
  * バリデーションエラーなど警告すべき事項が発生している場合に、警告終了させることができる。
- * 警告終了の方法はchunkまたはbatchlet内で、{@link javax.batch.runtime.context.JobContext#setExitStatus(String)}を
+ * 警告終了の方法はchunkまたはbatchlet内で、{@link jakarta.batch.runtime.context.JobContext#setExitStatus(String)}を
  * 呼び出し "WARNING" を終了ステータスとして設定する。警告終了時は、バッチステータスは任意の値を許可するため、
  * chunkまたはbatchlet内で、 例外を送出しバッチステータスが {@link BatchStatus#FAILED} となる場合であっても、
  * 終了ステータスに “WARNING” を設定していれば、警告終了する。

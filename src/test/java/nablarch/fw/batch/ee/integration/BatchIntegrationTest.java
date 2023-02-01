@@ -30,10 +30,10 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
-import javax.batch.runtime.BatchStatus;
-import javax.batch.runtime.JobExecution;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.core.Response;
+import jakarta.batch.runtime.BatchStatus;
+import jakarta.batch.runtime.JobExecution;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.core.Response;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -136,7 +136,7 @@ public class BatchIntegrationTest {
     }
 
     /**
-     * {@link javax.batch.api.Batchlet}実装クラスで行った登録処理が正常に完了していること。
+     * {@link jakarta.batch.api.Batchlet}実装クラスで行った登録処理が正常に完了していること。
      * <p/>
      * <ul>
      * <li>バッチ処理は正常に終了していること</li>
@@ -169,7 +169,7 @@ public class BatchIntegrationTest {
     }
 
     /**
-     * {@link javax.batch.api.Batchlet}実装クラスで例外が発生した場合、DBへの更新がロールバックされること。
+     * {@link jakarta.batch.api.Batchlet}実装クラスで例外が発生した場合、DBへの更新がロールバックされること。
      * <p/>
      * <ul>
      * <li>バッチ処理は異常終了(FAILED)していること</li>
@@ -203,7 +203,7 @@ public class BatchIntegrationTest {
     }
 
     /**
-     * {@link javax.batch.api.Batchlet}実装クラスで{@link Error}系の例外が発生した場合、DBへの更新がロールバックされること。
+     * {@link jakarta.batch.api.Batchlet}実装クラスで{@link Error}系の例外が発生した場合、DBへの更新がロールバックされること。
      * <p/>
      * <ul>
      * <li>バッチ処理は、異常終了していること</li>
@@ -1154,7 +1154,7 @@ public class BatchIntegrationTest {
     }
 
     /**
-     * アプリ側で{@link javax.batch.runtime.context.StepContext#setTransientUserData(Object)}を使用された場合に例外を送出すること
+     * アプリ側で{@link jakarta.batch.runtime.context.StepContext#setTransientUserData(Object)}を使用された場合に例外を送出すること
      *
      * @throws Exception
      */
@@ -1166,7 +1166,7 @@ public class BatchIntegrationTest {
 
         // -------------------------------------------------- assert log
         assertThat(InMemoryAppender.getLogMessages("ALL"), Matchers.<String>hasItem(allOf(
-                containsString("javax.batch.operations.BatchRuntimeException"),
+                containsString("jakarta.batch.operations.BatchRuntimeException"),
                 containsString("TransientUserData of StepContext must be StepScopedHolder type."))));
 
     }

@@ -1,8 +1,8 @@
 package nablarch.fw.batch.ee.integration.app;
 
-import javax.batch.api.chunk.AbstractItemReader;
-import javax.enterprise.context.Dependent;
-import javax.inject.Named;
+import jakarta.batch.api.chunk.AbstractItemReader;
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Named;
 
 /**
  * 標準出力するChunkのReader

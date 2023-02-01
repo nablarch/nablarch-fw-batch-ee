@@ -4,7 +4,7 @@ import nablarch.common.handler.DbConnectionManagementHandler;
 import nablarch.fw.batch.ee.listener.NablarchListenerContext;
 
 /**
- * バッチ処理で必要となるデータベース接続をスレッドローカル上で管理する{@link javax.batch.api.listener.StepListener}実装クラス。
+ * バッチ処理で必要となるデータベース接続をスレッドローカル上で管理する{@link jakarta.batch.api.listener.StepListener}実装クラス。
  * <p/>
  *
  * @author Hisaaki Shioiri

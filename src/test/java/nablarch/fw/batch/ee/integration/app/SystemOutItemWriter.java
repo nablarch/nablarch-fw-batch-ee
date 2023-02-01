@@ -2,12 +2,12 @@ package nablarch.fw.batch.ee.integration.app;
 
 import java.util.List;
 
-import javax.batch.api.BatchProperty;
-import javax.batch.api.chunk.AbstractItemWriter;
-import javax.batch.runtime.context.JobContext;
-import javax.enterprise.context.Dependent;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.batch.api.BatchProperty;
+import jakarta.batch.api.chunk.AbstractItemWriter;
+import jakarta.batch.runtime.context.JobContext;
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 /**
  * 標準出力するChunkのWriter。isWarningプロパティが"true"の場合は、終了ステータスを"WARNING"にする。

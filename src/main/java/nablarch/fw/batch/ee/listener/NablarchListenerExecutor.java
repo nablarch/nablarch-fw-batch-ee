@@ -4,8 +4,8 @@ import nablarch.core.log.Logger;
 import nablarch.core.log.LoggerManager;
 import nablarch.core.repository.SystemRepository;
 
-import javax.batch.runtime.context.JobContext;
-import javax.batch.runtime.context.StepContext;
+import jakarta.batch.runtime.context.JobContext;
+import jakarta.batch.runtime.context.StepContext;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;

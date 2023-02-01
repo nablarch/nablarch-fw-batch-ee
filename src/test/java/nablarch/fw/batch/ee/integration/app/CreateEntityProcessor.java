@@ -1,9 +1,9 @@
 package nablarch.fw.batch.ee.integration.app;
 
 
-import javax.batch.api.chunk.ItemProcessor;
-import javax.enterprise.context.Dependent;
-import javax.inject.Named;
+import jakarta.batch.api.chunk.ItemProcessor;
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Named;
 
 /**
  * 入力値をEntityに変換する。

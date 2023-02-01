@@ -5,14 +5,14 @@ import nablarch.fw.batch.ee.listener.NablarchListenerContext;
 import java.util.List;
 
 /**
- * {@link javax.batch.api.chunk.ItemWriter#writeItems(List)}の前後に任意の処理を行うインタフェース。
+ * {@link jakarta.batch.api.chunk.ItemWriter#writeItems(List)}の前後に任意の処理を行うインタフェース。
  *
  * @author Hisaaki Shioiri
  */
 public interface NablarchItemWriteListener {
 
     /**
-     * {@link javax.batch.api.chunk.ItemWriter#writeItems(List)}の実行前の処理を行う。
+     * {@link jakarta.batch.api.chunk.ItemWriter#writeItems(List)}の実行前の処理を行う。
      *
      * @param context {@link NablarchListenerContext}
      * @param items 書き込み対象のオブジェクト
@@ -20,7 +20,7 @@ public interface NablarchItemWriteListener {
     void beforeWrite(NablarchListenerContext context, List<Object> items);
 
     /**
-     * {@link javax.batch.api.chunk.ItemWriter#writeItems(List)}の実行後の処理を行う。
+     * {@link jakarta.batch.api.chunk.ItemWriter#writeItems(List)}の実行後の処理を行う。
      *
      * @param context {@link NablarchListenerContext}
      * @param items 書き込み対象のオブジェクト
@@ -28,7 +28,7 @@ public interface NablarchItemWriteListener {
     void afterWrite(NablarchListenerContext context, List<Object> items);
 
     /**
-     * {@link javax.batch.api.chunk.ItemWriter#writeItems(List)}で{@link Exception}が発生した場合の処理を行う。
+     * {@link jakarta.batch.api.chunk.ItemWriter#writeItems(List)}で{@link Exception}が発生した場合の処理を行う。
      * <p/>
      * 本メソッドは、Java Batch(JSR352)の仕様により、{@link Error}系が発生した場合はコールバックされない。
      *

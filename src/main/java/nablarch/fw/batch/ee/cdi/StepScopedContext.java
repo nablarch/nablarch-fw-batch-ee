@@ -1,12 +1,12 @@
 package nablarch.fw.batch.ee.cdi;
 
 import java.lang.annotation.Annotation;
-import javax.batch.operations.BatchRuntimeException;
-import javax.batch.runtime.context.StepContext;
-import javax.enterprise.context.spi.Context;
-import javax.enterprise.context.spi.Contextual;
-import javax.enterprise.context.spi.CreationalContext;
-import javax.enterprise.inject.spi.CDI;
+import jakarta.batch.operations.BatchRuntimeException;
+import jakarta.batch.runtime.context.StepContext;
+import jakarta.enterprise.context.spi.Context;
+import jakarta.enterprise.context.spi.Contextual;
+import jakarta.enterprise.context.spi.CreationalContext;
+import jakarta.enterprise.inject.spi.CDI;
 
 /**
  * ステップ単位で値を共有するための{@link Context}実装クラス

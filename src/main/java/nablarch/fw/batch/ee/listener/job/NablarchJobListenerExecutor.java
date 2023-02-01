@@ -6,12 +6,12 @@ import nablarch.fw.batch.ee.initializer.RepositoryInitializer;
 import nablarch.fw.batch.ee.listener.NablarchListenerContext;
 import nablarch.fw.batch.ee.listener.NablarchListenerExecutor;
 
-import javax.batch.api.BatchProperty;
-import javax.batch.api.listener.JobListener;
-import javax.batch.runtime.context.JobContext;
-import javax.enterprise.context.Dependent;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.batch.api.BatchProperty;
+import jakarta.batch.api.listener.JobListener;
+import jakarta.batch.runtime.context.JobContext;
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 /**
  * {@link JobListener}を実装したクラスで、{@link NablarchJobListener}を順次実行するクラス。

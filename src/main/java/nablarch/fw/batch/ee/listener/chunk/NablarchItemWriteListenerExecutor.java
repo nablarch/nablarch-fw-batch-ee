@@ -5,12 +5,12 @@ import nablarch.fw.batch.ee.listener.NablarchListenerContext;
 import nablarch.fw.batch.ee.listener.NablarchListenerExecutor;
 import nablarch.fw.batch.ee.listener.NablarchListenerExecutor.Runner;
 
-import javax.batch.api.chunk.listener.ItemWriteListener;
-import javax.batch.runtime.context.JobContext;
-import javax.batch.runtime.context.StepContext;
-import javax.enterprise.context.Dependent;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.batch.api.chunk.listener.ItemWriteListener;
+import jakarta.batch.runtime.context.JobContext;
+import jakarta.batch.runtime.context.StepContext;
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import java.util.List;
 
 /**
