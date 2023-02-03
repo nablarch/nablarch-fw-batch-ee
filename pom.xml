@@ -21,7 +21,28 @@
   </parent>
 
   <properties>
+    <wildfly.version>27.0.1.Final</wildfly.version>
+    <resteasy.version>6.2.2.Final</resteasy.version>
   </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.jboss.arquillian</groupId>
+        <artifactId>arquillian-bom</artifactId>
+        <version>1.7.0.Alpha13</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.shrinkwrap.resolver</groupId>
+        <artifactId>shrinkwrap-resolver-bom</artifactId>
+        <version>3.1.4</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
 
@@ -102,24 +123,29 @@
       <scope>test</scope>
     </dependency>
 
-<!--    <dependency>-->
-<!--      <groupId>org.glassfish.main.extras</groupId>-->
-<!--      <artifactId>glassfish-embedded-all</artifactId>-->
-<!--      <version>4.1</version>-->
-<!--      <scope>test</scope>-->
-<!--    </dependency>-->
-
     <dependency>
       <groupId>org.jboss.arquillian.junit</groupId>
       <artifactId>arquillian-junit-container</artifactId>
-      <version>1.0.0.Final</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
-      <groupId>org.jboss.arquillian.container</groupId>
-      <artifactId>arquillian-glassfish-embedded-3.1</artifactId>
-      <version>1.0.0.CR4</version>
+      <groupId>org.wildfly.arquillian</groupId>
+      <artifactId>wildfly-arquillian-container-embedded</artifactId>
+      <version>5.0.0.Alpha6</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.resteasy</groupId>
+      <artifactId>resteasy-client</artifactId>
+      <version>${resteasy.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.shrinkwrap.resolver</groupId>
+      <artifactId>shrinkwrap-resolver-impl-maven</artifactId>
       <scope>test</scope>
     </dependency>
 
@@ -155,39 +181,42 @@
 
   <build>
     <plugins>
+      <!-- Arquillian のテストで使用する WildFly をダウンロードする -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>3.5.0</version>
+        <executions>
+          <execution>
+            <id>unpack</id>
+            <phase>process-test-classes</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.wildfly</groupId>
+                  <artifactId>wildfly-dist</artifactId>
+                  <version>${wildfly.version}</version>
+                  <type>zip</type>
+                  <overWrite>false</overWrite>
+                  <outputDirectory>target</outputDirectory>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <excludes>
-            <exclude>nablarch.fw.batch.ee.integration.BatchIntegrationTest</exclude>
-          </excludes>
-          <systemProperties>
-            <property>
-              <!--
-              このシステムプロパティの設定が無いと、 Logback 1.1.10 以上でテストが失敗する。
-
-              Logback は 1.1.10 で LogbackServletContextListener を追加した。
-              このクラスは、サーブレットコンテナ終了時に Logback のコンテキストをクリアする機能を提供する。
-
-              本モジュールのテストには、 Arquillian を使ったテストが含まれている。
-              Arquillian を使ったテストはサーブレットコンテナを起動するが、
-              このとき LogbackServletContextListener が自動的に登録されてしまう。
-              このため、 Arquillian のテストが終了してコンテナが破棄されるときに
-              Logback のコンテキストもクリアされてしまうことになる。
-
-              すると、後続のテストで Logback 経由で出力されたログの内容をチェックしているテストが
-              軒並み失敗になるという問題が発生する。
-
-              これを回避するため、このシステムプロパティを設定している。
-              このシステムプロパティが設定されていると、 LogbackServletContextListener が
-              自動登録されるのを防ぐことができる。
-              これにより、 Logback のコンテキストがクリアされるのを防いでいる。
-              -->
-              <name>logbackDisableServletContainerInitializer</name>
-              <value>true</value>
-            </property>
-          </systemProperties>
+          <systemPropertyVariables>
+            <jboss.home>${project.basedir}/target/wildfly-${wildfly.version}</jboss.home>
+            <module.path>${project.basedir}/target/wildfly-${wildfly.version}/modules</module.path>
+          </systemPropertyVariables>
         </configuration>
       </plugin>
     </plugins>
