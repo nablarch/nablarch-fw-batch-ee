@@ -4,7 +4,7 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertThat;
 
-import javax.batch.runtime.context.JobContext;
+import jakarta.batch.runtime.context.JobContext;
 
 import mockit.Expectations;
 import mockit.Mocked;

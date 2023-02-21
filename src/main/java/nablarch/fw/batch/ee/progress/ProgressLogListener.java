@@ -1,13 +1,13 @@
 package nablarch.fw.batch.ee.progress;
 
 import java.util.List;
-import javax.batch.api.chunk.listener.AbstractItemWriteListener;
-import javax.enterprise.context.Dependent;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.batch.api.chunk.listener.AbstractItemWriteListener;
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 /**
- * Chunk実行時の進捗ログを出力する{@link javax.batch.api.chunk.listener.ItemWriteListener}実装クラス
+ * Chunk実行時の進捗ログを出力する{@link jakarta.batch.api.chunk.listener.ItemWriteListener}実装クラス
  *
  * @author Naoki Yamamoto
  */

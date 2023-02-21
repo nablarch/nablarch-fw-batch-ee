@@ -3,7 +3,7 @@ package nablarch.fw.batch.ee.cdi;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import javax.enterprise.context.spi.Contextual;
+import jakarta.enterprise.context.spi.Contextual;
 
 /**
  * ステップ単位で共有する値を保持するクラス。

@@ -1,17 +1,17 @@
 package nablarch.fw.batch.ee.integration.app;
 
-import javax.batch.api.AbstractBatchlet;
-import javax.batch.runtime.context.StepContext;
-import javax.enterprise.context.Dependent;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.batch.api.AbstractBatchlet;
+import jakarta.batch.runtime.context.StepContext;
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import nablarch.core.db.connection.AppDbConnection;
 import nablarch.core.db.connection.DbConnectionContext;
 import nablarch.core.db.statement.SqlPStatement;
 
 /**
- * batch_outputテーブルへデータを10レコード登録後に{@link StackOverflowError}を送出する{@link javax.batch.api.Batchlet}実装クラス。
+ * batch_outputテーブルへデータを10レコード登録後に{@link StackOverflowError}を送出する{@link jakarta.batch.api.Batchlet}実装クラス。
  *
  */
 @Named

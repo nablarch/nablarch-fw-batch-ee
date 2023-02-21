@@ -2,7 +2,7 @@ package nablarch.fw.batch.ee.chunk;
 
 import java.io.Serializable;
 
-import javax.batch.api.chunk.AbstractItemReader;
+import jakarta.batch.api.chunk.AbstractItemReader;
 
 import nablarch.core.db.connection.AppDbConnection;
 import nablarch.core.db.connection.ConnectionFactory;
@@ -13,7 +13,7 @@ import nablarch.core.transaction.TransactionContext;
 import nablarch.core.util.annotation.Published;
 
 /**
- * データベースを入力とする{@link javax.batch.api.chunk.ItemReader}の抽象クラス。
+ * データベースを入力とする{@link jakarta.batch.api.chunk.ItemReader}の抽象クラス。
  * <p/>
  * 本リーダを継承することで、リーダ専用のコネクションを使用してデータを読み込むことができる。
  * <p/>

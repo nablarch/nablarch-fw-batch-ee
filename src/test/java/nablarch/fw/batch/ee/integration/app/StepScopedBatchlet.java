@@ -1,10 +1,10 @@
 package nablarch.fw.batch.ee.integration.app;
 
-import javax.batch.api.AbstractBatchlet;
-import javax.batch.runtime.context.StepContext;
-import javax.enterprise.context.Dependent;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.batch.api.AbstractBatchlet;
+import jakarta.batch.runtime.context.StepContext;
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 /**
  * StepScopeの確認用のBatchlet

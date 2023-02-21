@@ -5,10 +5,10 @@ import nablarch.core.repository.di.DiContainer;
 import nablarch.core.repository.di.config.xml.XmlComponentDefinitionLoader;
 import org.junit.rules.ExternalResource;
 
-import javax.batch.operations.JobOperator;
-import javax.batch.runtime.BatchRuntime;
-import javax.batch.runtime.BatchStatus;
-import javax.batch.runtime.JobExecution;
+import jakarta.batch.operations.JobOperator;
+import jakarta.batch.runtime.BatchRuntime;
+import jakarta.batch.runtime.BatchStatus;
+import jakarta.batch.runtime.JobExecution;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;

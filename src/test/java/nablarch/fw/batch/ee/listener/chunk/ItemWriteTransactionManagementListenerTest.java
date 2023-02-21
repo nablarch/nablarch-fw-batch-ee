@@ -4,9 +4,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
-import javax.batch.operations.BatchRuntimeException;
-import javax.batch.runtime.context.JobContext;
-import javax.batch.runtime.context.StepContext;
+import jakarta.batch.operations.BatchRuntimeException;
+import jakarta.batch.runtime.context.JobContext;
+import jakarta.batch.runtime.context.StepContext;
 
 import nablarch.core.transaction.Transaction;
 import nablarch.core.transaction.TransactionContext;

@@ -1,9 +1,9 @@
 package nablarch.fw.batch.ee.integration.app;
 
 import java.util.List;
-import javax.batch.api.chunk.AbstractItemWriter;
-import javax.enterprise.context.Dependent;
-import javax.inject.Named;
+import jakarta.batch.api.chunk.AbstractItemWriter;
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Named;
 
 import nablarch.core.log.basic.LogLevel;
 import nablarch.core.log.operation.OperationLogger;

@@ -20,89 +20,42 @@
     <version>6-NEXT-SNAPSHOT</version>
   </parent>
 
-  <properties>
-    <junit.additionalArgLine>-XX:MaxPermSize=256m</junit.additionalArgLine>
-  </properties>
-
-  <profiles>
-    <profile>
-      <id>java9</id>
-      <activation>
-        <jdk>9</jdk>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <excludes>
-                <exclude>nablarch.fw.batch.ee.integration.BatchIntegrationTest</exclude>
-              </excludes>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <profile>
-      <id>java11</id>
-      <activation>
-        <jdk>11</jdk>
-      </activation>
-      <dependencies>
-        <dependency>
-            <groupId>javax.xml.bind</groupId>
-            <artifactId>jaxb-api</artifactId>
-            <version>2.3.1</version>
-            <scope>test</scope>
-        </dependency>
-      </dependencies>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <excludes>
-                <exclude>nablarch.fw.batch.ee.integration.BatchIntegrationTest</exclude>
-              </excludes>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <profile>
-      <id>java17</id>
-      <activation>
-        <jdk>17</jdk>
-      </activation>
-      <properties>
-        <!-- Java 17 で動かすときに MaxPermSize の指定があるとエラーになるので、設定を上書きして除去 -->
-        <junit.additionalArgLine></junit.additionalArgLine>
-      </properties>
-    </profile>
-  </profiles>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.jboss.arquillian</groupId>
+        <artifactId>arquillian-bom</artifactId>
+        <version>${arquillian-bom.version}</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.shrinkwrap.resolver</groupId>
+        <artifactId>shrinkwrap-resolver-bom</artifactId>
+        <version>${shrinkwrap-resolver-bom.version}</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
 
     <dependency>
-      <groupId>javax.batch</groupId>
-      <artifactId>javax.batch-api</artifactId>
-      <version>1.0</version>
+      <groupId>jakarta.batch</groupId>
+      <artifactId>jakarta.batch-api</artifactId>
       <scope>provided</scope>
     </dependency>
 
     <dependency>
-      <groupId>javax.inject</groupId>
-      <artifactId>javax.inject</artifactId>
-      <version>1</version>
+      <groupId>jakarta.inject</groupId>
+      <artifactId>jakarta.inject-api</artifactId>
       <scope>provided</scope>
     </dependency>
 
     <dependency>
-      <groupId>javax.enterprise</groupId>
-      <artifactId>cdi-api</artifactId>
-      <version>1.1</version>
+      <groupId>jakarta.enterprise</groupId>
+      <artifactId>jakarta.enterprise.cdi-api</artifactId>
       <scope>provided</scope>
     </dependency>
 
@@ -163,23 +116,26 @@
     </dependency>
 
     <dependency>
-      <groupId>org.glassfish.main.extras</groupId>
-      <artifactId>glassfish-embedded-all</artifactId>
-      <version>4.1</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
       <groupId>org.jboss.arquillian.junit</groupId>
       <artifactId>arquillian-junit-container</artifactId>
-      <version>1.0.0.Final</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
-      <groupId>org.jboss.arquillian.container</groupId>
-      <artifactId>arquillian-glassfish-embedded-3.1</artifactId>
-      <version>1.0.0.CR4</version>
+      <groupId>org.wildfly.arquillian</groupId>
+      <artifactId>wildfly-arquillian-container-embedded</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.resteasy</groupId>
+      <artifactId>resteasy-client</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.shrinkwrap.resolver</groupId>
+      <artifactId>shrinkwrap-resolver-impl-maven</artifactId>
       <scope>test</scope>
     </dependency>
 
@@ -197,40 +153,58 @@
       <scope>test</scope>
     </dependency>
 
+    <dependency>
+      <groupId>jakarta.xml.bind</groupId>
+      <artifactId>jakarta.xml.bind-api</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>jakarta.ws.rs</groupId>
+      <artifactId>jakarta.ws.rs-api</artifactId>
+      <scope>test</scope>
+    </dependency>
+
   </dependencies>
 
   <build>
     <plugins>
+      <!-- Arquillian のテストで使用する WildFly をダウンロードする -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>3.5.0</version>
+        <executions>
+          <execution>
+            <id>unpack</id>
+            <phase>process-test-classes</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.wildfly</groupId>
+                  <artifactId>wildfly-dist</artifactId>
+                  <version>${arquillian-wildfly.version}</version>
+                  <type>zip</type>
+                  <overWrite>false</overWrite>
+                  <outputDirectory>target</outputDirectory>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <systemProperties>
-            <property>
-              <!--
-              このシステムプロパティの設定が無いと、 Logback 1.1.10 以上でテストが失敗する。
-
-              Logback は 1.1.10 で LogbackServletContextListener を追加した。
-              このクラスは、サーブレットコンテナ終了時に Logback のコンテキストをクリアする機能を提供する。
-
-              本モジュールのテストには、 Arquillian を使ったテストが含まれている。
-              Arquillian を使ったテストはサーブレットコンテナを起動するが、
-              このとき LogbackServletContextListener が自動的に登録されてしまう。
-              このため、 Arquillian のテストが終了してコンテナが破棄されるときに
-              Logback のコンテキストもクリアされてしまうことになる。
-
-              すると、後続のテストで Logback 経由で出力されたログの内容をチェックしているテストが
-              軒並み失敗になるという問題が発生する。
-
-              これを回避するため、このシステムプロパティを設定している。
-              このシステムプロパティが設定されていると、 LogbackServletContextListener が
-              自動登録されるのを防ぐことができる。
-              これにより、 Logback のコンテキストがクリアされるのを防いでいる。
-              -->
-              <name>logbackDisableServletContainerInitializer</name>
-              <value>true</value>
-            </property>
-          </systemProperties>
+          <systemPropertyVariables>
+            <jboss.home>${project.basedir}/target/wildfly-${arquillian-wildfly.version}</jboss.home>
+            <module.path>${project.basedir}/target/wildfly-${arquillian-wildfly.version}/modules</module.path>
+          </systemPropertyVariables>
         </configuration>
       </plugin>
     </plugins>

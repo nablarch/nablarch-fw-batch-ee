@@ -1,6 +1,6 @@
 package nablarch.fw.batch.ee.listener.step;
 
-import javax.batch.runtime.BatchStatus;
+import jakarta.batch.runtime.BatchStatus;
 
 import nablarch.core.transaction.Transaction;
 import nablarch.core.transaction.TransactionContext;
@@ -53,8 +53,8 @@ public class StepTransactionManagementListener extends AbstractNablarchStepListe
     /**
      * トランザクションを終了しコンテキストから削除する。
      * <p/>
-     * ステップの実行に失敗した場合({@link javax.batch.runtime.context.StepContext#getException()}が設定されている場合や
-     * {@link javax.batch.runtime.context.JobContext#getBatchStatus()}が{@link BatchStatus#FAILED}の場合)には、
+     * ステップの実行に失敗した場合({@link jakarta.batch.runtime.context.StepContext#getException()}が設定されている場合や
+     * {@link jakarta.batch.runtime.context.JobContext#getBatchStatus()}が{@link BatchStatus#FAILED}の場合)には、
      * トランザクションをロールバックする。
      */
     @Override

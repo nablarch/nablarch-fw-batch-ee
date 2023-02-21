@@ -11,8 +11,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.batch.runtime.context.JobContext;
-import javax.batch.runtime.context.StepContext;
+import jakarta.batch.runtime.context.JobContext;
+import jakarta.batch.runtime.context.StepContext;
 import java.util.*;
 
 import static org.hamcrest.CoreMatchers.is;

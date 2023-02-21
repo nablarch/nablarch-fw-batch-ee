@@ -4,8 +4,8 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
-import javax.batch.operations.BatchRuntimeException;
-import javax.batch.runtime.context.JobContext;
+import jakarta.batch.operations.BatchRuntimeException;
+import jakarta.batch.runtime.context.JobContext;
 
 import nablarch.fw.batch.ee.listener.NablarchListenerContext;
 import nablarch.fw.handler.AlreadyProcessRunningException;

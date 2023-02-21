@@ -1,12 +1,12 @@
 package nablarch.fw.batch.ee.progress;
 
-import javax.batch.operations.BatchRuntimeException;
-import javax.batch.runtime.Metric;
-import javax.batch.runtime.Metric.MetricType;
-import javax.batch.runtime.context.JobContext;
-import javax.batch.runtime.context.StepContext;
-import javax.enterprise.inject.Typed;
-import javax.inject.Inject;
+import jakarta.batch.operations.BatchRuntimeException;
+import jakarta.batch.runtime.Metric;
+import jakarta.batch.runtime.Metric.MetricType;
+import jakarta.batch.runtime.context.JobContext;
+import jakarta.batch.runtime.context.StepContext;
+import jakarta.enterprise.inject.Typed;
+import jakarta.inject.Inject;
 
 import nablarch.fw.batch.ee.cdi.StepScoped;
 import nablarch.fw.batch.progress.ProcessedCountBasedProgressCalculator;

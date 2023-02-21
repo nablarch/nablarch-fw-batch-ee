@@ -1,7 +1,7 @@
 package nablarch.fw.batch.ee.listener.step;
 
-import javax.batch.runtime.context.JobContext;
-import javax.batch.runtime.context.StepContext;
+import jakarta.batch.runtime.context.JobContext;
+import jakarta.batch.runtime.context.StepContext;
 
 import nablarch.common.handler.DbConnectionManagementHandler;
 import nablarch.core.db.connection.DbConnectionContext;

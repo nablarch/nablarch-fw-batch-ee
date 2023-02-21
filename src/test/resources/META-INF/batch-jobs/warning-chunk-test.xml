@@ -1,4 +1,4 @@
-<job id="warning-chunk-test" xmlns="http://xmlns.jcp.org/xml/ns/javaee" version="1.0">
+<job id="warning-chunk-test" xmlns="https://jakarta.ee/xml/ns/jakartaee" version="2.0">
   <step id="step1">
     <chunk item-count="5">
       <reader ref="systemOutItemReader"/>

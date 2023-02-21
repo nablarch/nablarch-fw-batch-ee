@@ -9,10 +9,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import javax.batch.operations.BatchRuntimeException;
-import javax.batch.runtime.Metric;
-import javax.batch.runtime.context.JobContext;
-import javax.batch.runtime.context.StepContext;
+import jakarta.batch.operations.BatchRuntimeException;
+import jakarta.batch.runtime.Metric;
+import jakarta.batch.runtime.context.JobContext;
+import jakarta.batch.runtime.context.StepContext;
 
 import mockit.Expectations;
 import nablarch.fw.batch.ee.integration.InMemoryAppender;

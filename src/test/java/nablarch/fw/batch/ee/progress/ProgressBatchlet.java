@@ -1,10 +1,10 @@
 package nablarch.fw.batch.ee.progress;
 
-import javax.batch.api.AbstractBatchlet;
-import javax.batch.runtime.context.JobContext;
-import javax.enterprise.context.Dependent;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.batch.api.AbstractBatchlet;
+import jakarta.batch.runtime.context.JobContext;
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 /**
  * 進捗ログの出力確認用のBatchlet
