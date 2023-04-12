@@ -10,6 +10,7 @@ import nablarch.core.repository.ObjectLoader;
 import nablarch.core.repository.SystemRepository;
 import nablarch.core.repository.di.DiContainer;
 import nablarch.core.repository.di.config.xml.XmlComponentDefinitionLoader;
+import nablarch.core.util.StringUtil;
 import nablarch.fw.batch.ee.JobExecutor;
 import nablarch.fw.batch.ee.initializer.RepositoryInitializer;
 import nablarch.fw.batch.ee.integration.app.FileWriter;
@@ -20,11 +21,9 @@ import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.container.test.api.RunAsClient;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
-import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ArchivePath;
 import org.jboss.shrinkwrap.api.Filter;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.Maven;
@@ -130,11 +129,14 @@ public class BatchIntegrationTest {
      * @return war アーカイブ
      */
     private static WebArchive buildWar(JavaArchive mainJar) {
+        final String dbProfile = System.getProperty("db-profile");
+        final String[] profiles = StringUtil.isNullOrEmpty(dbProfile) ? new String[0] : new String[] {dbProfile};
+
         final WebArchive archive = ShrinkWrap.create(WebArchive.class, "batch.war")
                 .addAsLibraries(
                         Maven.configureResolver()
                                 .workOffline()
-                                .loadPomFromFile("pom.xml")
+                                .loadPomFromFile("pom.xml", profiles)
                                 .importCompileAndRuntimeDependencies()
                                 .importTestDependencies()
                                 .resolve()
