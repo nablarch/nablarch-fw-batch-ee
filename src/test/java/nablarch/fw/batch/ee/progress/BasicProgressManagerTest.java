@@ -1,31 +1,29 @@
 package nablarch.fw.batch.ee.progress;
 
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertThat;
+import jakarta.batch.operations.BatchRuntimeException;
+import jakarta.batch.runtime.Metric;
+import jakarta.batch.runtime.context.JobContext;
+import jakarta.batch.runtime.context.StepContext;
+import nablarch.fw.batch.ee.integration.InMemoryAppender;
+import nablarch.fw.batch.progress.ProcessedCountBasedProgressCalculator;
+import nablarch.fw.batch.progress.Progress;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.mockito.MockedConstruction;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import jakarta.batch.operations.BatchRuntimeException;
-import jakarta.batch.runtime.Metric;
-import jakarta.batch.runtime.context.JobContext;
-import jakarta.batch.runtime.context.StepContext;
-
-import mockit.Expectations;
-import nablarch.fw.batch.ee.integration.InMemoryAppender;
-import nablarch.fw.batch.progress.ProcessedCountBasedProgressCalculator;
-import nablarch.fw.batch.progress.Progress;
-
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-
-import mockit.Mocked;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockConstruction;
+import static org.mockito.Mockito.when;
 
 /**
  * {@link BasicProgressManager}のテスト。
@@ -35,100 +33,95 @@ public class BasicProgressManagerTest {
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
 
-    @Mocked
-    private JobContext mockJobContext;
+    private final JobContext mockJobContext = mock(JobContext.class);
     
-    @Mocked
-    private StepContext mockStepContext;
+    private final StepContext mockStepContext = mock(StepContext.class);
 
     @Before
     public void setUp() throws Exception {
         InMemoryAppender.clear();
 
-        new Expectations() {{
-            mockJobContext.getJobName();
-            result = "test-job";
-            mockStepContext.getStepName();
-            result = "test-step";
-        }};
+        when(mockJobContext.getJobName()).thenReturn("test-job");
+        when(mockStepContext.getStepName()).thenReturn("test-step");
     }
 
     @Test
-    @Ignore("jacoco と jmockit が競合してエラーになるため")
-    public void 進捗状況がログ出力されること(@Mocked final ProcessedCountBasedProgressCalculator progressCalculator) throws Exception {
+    public void 進捗状況がログ出力されること() throws Exception {
+        final SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd hh:mm:ss.SSS");
+        final Date estimatedDate1 = new Date();
+        TimeUnit.MILLISECONDS.sleep(100);
+        final Date estimatedDate2 = new Date();
+
+        when(mockStepContext.getMetrics()).thenReturn(new Metric[] {
+                new Metric() {
+                    @Override
+                    public MetricType getType() {
+                        return MetricType.READ_COUNT;
+                    }
+
+                    @Override
+                    public long getValue() {
+                        return 100;
+                    }
+                }
+        });
+
+
+        try (final MockedConstruction<ProcessedCountBasedProgressCalculator> mocked = mockConstruction(ProcessedCountBasedProgressCalculator.class, (mock, context) -> {
+            when(mock.calculate(100)).thenReturn(
+                    new Progress(1.23, 4.56, estimatedDate1, 12245),
+                    new Progress(1.21, 2.34, estimatedDate2, 12205)
+            );
+        })) {
+            final ProgressManager sut = new BasicProgressManager(mockJobContext, mockStepContext);
+            sut.setInputCount(12345);
+            sut.outputProgressInfo();
+            sut.outputProgressInfo();
+
+            final List<String> messages = InMemoryAppender.getLogMessages("PROGRESS");
+            assertThat(messages, contains(
+                            containsString("job name: [test-job] step name: [test-step] input count: [12345]"),
+                            containsString("job name: [test-job] step name: [test-step] total tps: [1.23] current tps: [4.56] estimated end time: ["
+                                    + format.format(estimatedDate1) + "] "
+                                    + "remaining count: [12245]"),
+                            containsString("job name: [test-job] step name: [test-step] total tps: [1.21] current tps: [2.34] estimated end time: ["
+                                    + format.format(estimatedDate2) + "] "
+                                    + "remaining count: [12205]")
+                    )
+            );
+        }
+    }
+
+    @Test
+    public void 入力件数を明示的に指定して進捗ログが出力できること() throws Exception {
         final SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd hh:mm:ss.SSS");
         final Date estimatedDate1 = new Date();
         TimeUnit.MILLISECONDS.sleep(100);
         final Date estimatedDate2 = new Date();
         
-        new Expectations() {{
-            mockStepContext.getMetrics();
-            result = new Metric[] {
-                    new Metric() {
-                        @Override
-                        public MetricType getType() {
-                            return MetricType.READ_COUNT;
-                        }
+        try (final MockedConstruction<ProcessedCountBasedProgressCalculator> mocked = mockConstruction(ProcessedCountBasedProgressCalculator.class, (mock, context) -> {
+            when(mock.calculate(1000))
+                    .thenReturn(new Progress(1.23, 4.56, estimatedDate1, 9000));
+            when(mock.calculate(2000))
+                    .thenReturn(new Progress(1.22, 2.34, estimatedDate2, 7000));
+        })) {
+            final ProgressManager sut = new BasicProgressManager(mockJobContext, mockStepContext);
+            sut.setInputCount(10000);
+            sut.outputProgressInfo(1000);
+            sut.outputProgressInfo(2000);
 
-                        @Override
-                        public long getValue() {
-                            return 100;
-                        }
-                    }
-            };
-
-            progressCalculator.calculate(100);
-            returns(new Progress(1.23, 4.56, estimatedDate1, 12245), new Progress(1.21, 2.34, estimatedDate2, 12205));
-        }};
-        final ProgressManager sut = new BasicProgressManager(mockJobContext, mockStepContext);
-        sut.setInputCount(12345);
-        sut.outputProgressInfo();
-        sut.outputProgressInfo();
-
-        final List<String> messages = InMemoryAppender.getLogMessages("PROGRESS");
-        assertThat(messages, contains(
-                containsString("job name: [test-job] step name: [test-step] input count: [12345]"),
-                containsString("job name: [test-job] step name: [test-step] total tps: [1.23] current tps: [4.56] estimated end time: ["
-                        + format.format(estimatedDate1) + "] "
-                        + "remaining count: [12245]"),
-                containsString("job name: [test-job] step name: [test-step] total tps: [1.21] current tps: [2.34] estimated end time: ["
-                        + format.format(estimatedDate2) + "] "
-                        + "remaining count: [12205]")
-                )
-        );
-    }
-
-    @Test
-    @Ignore("jacoco と jmockit が競合してエラーになるため")
-    public void 入力件数を明示的に指定して進捗ログが出力できること(@Mocked final ProcessedCountBasedProgressCalculator progressCalculator) throws Exception {
-        final SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd hh:mm:ss.SSS");
-        final Date estimatedDate1 = new Date();
-        TimeUnit.MILLISECONDS.sleep(100);
-        final Date estimatedDate2 = new Date();
-
-        new Expectations() {{
-            progressCalculator.calculate(1000);
-            result = new Progress(1.23, 4.56, estimatedDate1, 9000);
-            progressCalculator.calculate(2000);
-            result = new Progress(1.22, 2.34, estimatedDate2, 7000);
-        }};
-
-        final ProgressManager sut = new BasicProgressManager(mockJobContext, mockStepContext);
-        sut.setInputCount(10000);
-        sut.outputProgressInfo(1000);
-        sut.outputProgressInfo(2000);
-
-        final List<String> messages = InMemoryAppender.getLogMessages("PROGRESS");
-        assertThat(messages, contains(
-                containsString("job name: [test-job] step name: [test-step] input count: [10000]"),
-                containsString("job name: [test-job] step name: [test-step] total tps: [1.23] current tps: [4.56] estimated end time: ["
-                        + format.format(estimatedDate1) + "] "
-                        + "remaining count: [9000]"),
-                containsString("job name: [test-job] step name: [test-step] total tps: [1.22] current tps: [2.34] estimated end time: ["
-                        + format.format(estimatedDate2) + "] "
-                        + "remaining count: [7000]")
-                )
-        );
+            final List<String> messages = InMemoryAppender.getLogMessages("PROGRESS");
+            assertThat(messages, contains(
+                            containsString("job name: [test-job] step name: [test-step] input count: [10000]"),
+                            containsString("job name: [test-job] step name: [test-step] total tps: [1.23] current tps: [4.56] estimated end time: ["
+                                    + format.format(estimatedDate1) + "] "
+                                    + "remaining count: [9000]"),
+                            containsString("job name: [test-job] step name: [test-step] total tps: [1.22] current tps: [2.34] estimated end time: ["
+                                    + format.format(estimatedDate2) + "] "
+                                    + "remaining count: [7000]")
+                    )
+            );
+        }
     }
 
     @Test
@@ -182,21 +175,18 @@ public class BasicProgressManagerTest {
     @Test
     public void 入力件数を設定せずに進捗ログを出力しようとした場合はエラーとなること() throws Exception {
 
-        new Expectations() {{
-            mockStepContext.getMetrics();
-            result = new Metric[] {
-                    new Metric() {
-                        @Override
-                        public MetricType getType() {
-                            return MetricType.READ_COUNT;
-                        }
-                        @Override
-                        public long getValue() {
-                            return 100;
-                        }
+        when(mockStepContext.getMetrics()).thenReturn(new Metric[] {
+                new Metric() {
+                    @Override
+                    public MetricType getType() {
+                        return MetricType.READ_COUNT;
                     }
-            };
-        }};
+                    @Override
+                    public long getValue() {
+                        return 100;
+                    }
+                }
+        });
 
         expectedException.expect(IllegalStateException.class);
         expectedException.expectMessage("input count is not set. must set input count. job name: [test-job] step name: [test-step]");
@@ -206,10 +196,7 @@ public class BasicProgressManagerTest {
 
     @Test
     public void StepContextかリード済み件数が取れない場合はエラーとなること() throws Exception {
-        new Expectations() {{
-            mockStepContext.getMetrics();
-            result = new Metric[0];
-        }};
+        when(mockStepContext.getMetrics()).thenReturn(new Metric[0]);
         expectedException.expect(BatchRuntimeException.class);
         expectedException.expectMessage("failed to StepContext#getMetrics");
         

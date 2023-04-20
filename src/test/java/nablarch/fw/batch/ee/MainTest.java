@@ -1,21 +1,24 @@
 package nablarch.fw.batch.ee;
 
-import static org.hamcrest.CoreMatchers.*;
-
-import java.util.Properties;
-
 import jakarta.batch.operations.JobOperator;
 import jakarta.batch.runtime.BatchRuntime;
 import jakarta.batch.runtime.BatchStatus;
 import jakarta.batch.runtime.JobExecution;
-
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import org.junit.rules.ExpectedException;
+import org.mockito.MockedStatic;
 
-import mockit.Expectations;
-import mockit.Mocked;
+import java.util.Properties;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.when;
 
 /**
  * バッチアプリケーションのメインクラスのテスト。
@@ -30,9 +33,8 @@ public class MainTest {
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 
-    @Mocked
-    BatchRuntime runtime;
-
+    private final JobOperator jobOperator = mock(JobOperator.class, RETURNS_DEEP_STUBS);
+    
     /**
      * 引数の指定がない場合のテスト
      */
@@ -69,16 +71,14 @@ public class MainTest {
      */
     @Test
     public void testMainSuccess() {
-        new Expectations() {{
-            final JobOperator jobOperator = BatchRuntime.getJobOperator();
-            jobOperator.start("main-test-Job1", new Properties());
-            result = 1L;
-            final JobExecution jobExecution = jobOperator.getJobExecution(1L);
-            jobExecution.getBatchStatus();
-            result = BatchStatus.COMPLETED;
-        }};
-        exit.expectSystemExitWithStatus(0);
-        Main.main("main-test-Job1");
+        try (final MockedStatic<BatchRuntime> mocked = mockStatic(BatchRuntime.class)) {
+            mocked.when(BatchRuntime::getJobOperator).thenReturn(jobOperator);
+            when(jobOperator.start(eq("main-test-Job1"), any(Properties.class))).thenReturn(1L);
+            when(jobOperator.getJobExecution(1L).getBatchStatus()).thenReturn(BatchStatus.COMPLETED);
+
+            exit.expectSystemExitWithStatus(0);
+            Main.main("main-test-Job1");
+        }
     }
 
     /**
@@ -86,16 +86,14 @@ public class MainTest {
      */
     @Test
     public void testMainError() {
-        new Expectations() {{
-            final JobOperator jobOperator = BatchRuntime.getJobOperator();
-            jobOperator.start("main-test-Job2", new Properties());
-            result = 2L;
-            final JobExecution jobExecution = jobOperator.getJobExecution(2L);
-            jobExecution.getBatchStatus();
-            result = BatchStatus.FAILED;
-        }};
-        exit.expectSystemExitWithStatus(1);
-        Main.main("main-test-Job2");
+        try (final MockedStatic<BatchRuntime> mocked = mockStatic(BatchRuntime.class)) {
+            mocked.when(BatchRuntime::getJobOperator).thenReturn(jobOperator);
+            when(jobOperator.start(eq("main-test-Job2"), any(Properties.class))).thenReturn(2L);
+            when(jobOperator.getJobExecution(2L).getBatchStatus()).thenReturn(BatchStatus.FAILED);
+
+            exit.expectSystemExitWithStatus(1);
+            Main.main("main-test-Job2");
+        }
     }
 
     /**
@@ -103,18 +101,17 @@ public class MainTest {
      */
     @Test
     public void testMainWarning() {
-        new Expectations() {{
-            final JobOperator jobOperator = BatchRuntime.getJobOperator();
-            jobOperator.start("main-test-Job3", new Properties());
-            result = 3L;
+        try (final MockedStatic<BatchRuntime> mocked = mockStatic(BatchRuntime.class)) {
+            mocked.when(BatchRuntime::getJobOperator).thenReturn(jobOperator);
+            when(jobOperator.start(eq("main-test-Job3"), any(Properties.class))).thenReturn(3L);
+
             final JobExecution jobExecution = jobOperator.getJobExecution(3L);
-            jobExecution.getBatchStatus();
-            result = BatchStatus.COMPLETED;
-            jobExecution.getExitStatus();
-            result = "WARNING";
-        }};
-        exit.expectSystemExitWithStatus(2);
-        Main.main("main-test-Job3");
+            when(jobExecution.getBatchStatus()).thenReturn(BatchStatus.COMPLETED);
+            when(jobExecution.getExitStatus()).thenReturn("WARNING");
+
+            exit.expectSystemExitWithStatus(2);
+            Main.main("main-test-Job3");
+        }
     }
 
     /**
@@ -123,17 +120,16 @@ public class MainTest {
      */
     @Test
     public void testMainFailedButWarning() {
-        new Expectations() {{
-            final JobOperator jobOperator = BatchRuntime.getJobOperator();
-            final long executionId = jobOperator.start("main-test-Job4", new Properties());
-            result = 4L;
+        try (final MockedStatic<BatchRuntime> mocked = mockStatic(BatchRuntime.class)) {
+            mocked.when(BatchRuntime::getJobOperator).thenReturn(jobOperator);
+            when(jobOperator.start(eq("main-test-Job4"), any(Properties.class))).thenReturn(4L);
+
             final JobExecution jobExecution = jobOperator.getJobExecution(4L);
-            jobExecution.getBatchStatus();
-            result = BatchStatus.FAILED;
-            jobExecution.getExitStatus();
-            result = "WARNING";
-        }};
-        exit.expectSystemExitWithStatus(2);
-        Main.main("main-test-Job4");
+            when(jobExecution.getBatchStatus()).thenReturn(BatchStatus.FAILED);
+            when(jobExecution.getExitStatus()).thenReturn("WARNING");
+            
+            exit.expectSystemExitWithStatus(2);
+            Main.main("main-test-Job4");
+        }
     }
 }

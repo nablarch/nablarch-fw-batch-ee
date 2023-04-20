@@ -1,21 +1,9 @@
 package nablarch.fw.batch.ee.chunk;
 
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
-import static org.hamcrest.Matchers.sameInstance;
-import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-
-import java.io.Serializable;
-import java.util.Iterator;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
 import nablarch.common.dao.EntityUtil;
 import nablarch.common.dao.UniversalDao;
 import nablarch.core.db.connection.ConnectionFactory;
@@ -26,7 +14,6 @@ import nablarch.core.transaction.TransactionContext;
 import nablarch.test.support.SystemRepositoryResource;
 import nablarch.test.support.db.helper.DatabaseTestRunner;
 import nablarch.test.support.db.helper.VariousDbTestHelper;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -34,8 +21,19 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 
-import mockit.Mocked;
-import mockit.Verifications;
+import java.io.Serializable;
+import java.util.Iterator;
+
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.sameInstance;
+import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 /**
  * {@link BaseDatabaseItemReader}のテストクラス。
@@ -125,7 +123,8 @@ public class BaseDatabaseItemReaderTest {
      * close時にコネクションが閉じられること。
      */
     @Test
-    public void close(@Mocked final TransactionManagerConnection mockConnection) throws Exception {
+    public void close() throws Exception {
+        final TransactionManagerConnection mockConnection = mock(TransactionManagerConnection.class, RETURNS_DEEP_STUBS);
         systemRepositoryResource.addComponent("connectionFactory", new ConnectionFactory() {
             @Override
             public TransactionManagerConnection getConnection(final String s) {
@@ -137,10 +136,7 @@ public class BaseDatabaseItemReaderTest {
         sut.open(null);
         sut.close();
 
-        new Verifications() {{
-            mockConnection.terminate();
-            times = 1;
-        }};
+        verify(mockConnection).terminate();
     }
 
     /**

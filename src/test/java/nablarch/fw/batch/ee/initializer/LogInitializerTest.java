@@ -1,15 +1,14 @@
 package nablarch.fw.batch.ee.initializer;
 
-import mockit.Mocked;
-import mockit.Verifications;
 import nablarch.core.log.app.FailureLogUtil;
 import nablarch.core.log.app.LogInitializationHelper;
-
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.MockedStatic;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mockStatic;
 
 /**
  * {@link LogInitializer}のテスト。
@@ -30,21 +29,23 @@ public class LogInitializerTest {
      * @throws Exception
      */
     @Test
-    public void testInitialize(@Mocked FailureLogUtil failureLogUtil,
-                               @Mocked LogInitializationHelper logInitializationHelper) throws Exception {
-        // 初期化済みフラグがfalseであること
-        assertThat(LogInitializer.isInitialized, is(false));
+    public void testInitialize() throws Exception {
+        try (
+            final MockedStatic<FailureLogUtil> failureLogUtil = mockStatic(FailureLogUtil.class);
+            final MockedStatic<LogInitializationHelper> logInitializationHelper = mockStatic(LogInitializationHelper.class);
+        ) {
+            // 初期化済みフラグがfalseであること
+            assertThat(LogInitializer.isInitialized, is(false));
 
-        LogInitializer.initialize();
+            LogInitializer.initialize();
 
-        // ログ初期化処理が実行されていること
-        new Verifications() {{
-            FailureLogUtil.initialize(); times = 1;
-            LogInitializationHelper.initialize(); times = 1;
-        }};
+            // ログ初期化処理が実行されていること
+            failureLogUtil.verify(FailureLogUtil::initialize);
+            logInitializationHelper.verify(LogInitializationHelper::initialize);
 
-        // 初期化済みフラグがtrueであること
-        assertThat(LogInitializer.isInitialized, is(true));
+            // 初期化済みフラグがtrueであること
+            assertThat(LogInitializer.isInitialized, is(true));
+        }
     }
 
     /**
@@ -54,26 +55,26 @@ public class LogInitializerTest {
      * @throws Exception
      */
     @Test
-    public void testBeforeJobForInitialized(
-            @Mocked FailureLogUtil failureLogUtil,
-            @Mocked LogInitializationHelper logInitializationHelper) throws Exception {
+    public void testBeforeJobForInitialized() throws Exception {
+        try (
+            final MockedStatic<FailureLogUtil> failureLogUtil = mockStatic(FailureLogUtil.class);
+            final MockedStatic<LogInitializationHelper> logInitializationHelper = mockStatic(LogInitializationHelper.class);
+        ) {
+            // 初期化済みフラグがfalseであること
+            assertThat(LogInitializer.isInitialized, is(false));
 
-        // 初期化済みフラグがfalseであること
-        assertThat(LogInitializer.isInitialized, is(false));
+            // 1回目
+            LogInitializer.initialize();
 
-        // 1回目
-        LogInitializer.initialize();
+            // 2回目
+            LogInitializer.initialize();
 
-        // 2回目
-        LogInitializer.initialize();
+            // 初期化済みフラグがtrueであること
+            assertThat(LogInitializer.isInitialized, is(true));
 
-        // 初期化済みフラグがtrueであること
-        assertThat(LogInitializer.isInitialized, is(true));
-
-        // ログ初期化処理が一度だけ実行されていること
-        new Verifications() {{
-            FailureLogUtil.initialize(); times = 1;
-            LogInitializationHelper.initialize(); times = 1;
-        }};
+            // ログ初期化処理が一度だけ実行されていること
+            failureLogUtil.verify(FailureLogUtil::initialize);
+            logInitializationHelper.verify(LogInitializationHelper::initialize);
+        }
     }
 }

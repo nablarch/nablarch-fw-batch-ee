@@ -1,25 +1,29 @@
 package nablarch.fw.batch.ee.listener;
 
-import mockit.Deencapsulation;
-import mockit.Expectations;
-import mockit.Mocked;
+import jakarta.batch.runtime.context.JobContext;
+import jakarta.batch.runtime.context.StepContext;
 import nablarch.core.repository.ObjectLoader;
 import nablarch.core.repository.SystemRepository;
 import nablarch.fw.batch.ee.integration.InMemoryAppender;
 import nablarch.fw.batch.ee.listener.NablarchListenerExecutor.Runner;
+import nablarch.test.support.reflection.ReflectionUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import jakarta.batch.runtime.context.JobContext;
-import jakarta.batch.runtime.context.StepContext;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * {@link NablarchListenerExecutor}のテストクラス。
@@ -31,24 +35,14 @@ public class NablarchListenerExecutorTest {
 
     List<String> listenerList = new ArrayList<String>();
 
-    @Mocked
-    JobContext jobContext;
+    JobContext jobContext = mock(JobContext.class);
 
-    @Mocked
-    StepContext stepContext;
+    StepContext stepContext = mock(StepContext.class);
 
     @Before
     public void setUp() throws Exception {
-        new Expectations() {{
-            jobContext.getJobName();
-            result = "testJob";
-            maxTimes = 1;
-            minTimes = 0;
-            stepContext.getStepName();
-            result = "testStep";
-            maxTimes = 1;
-            minTimes = 0;
-        }};
+        when(jobContext.getJobName()).thenReturn("testJob");
+        when(stepContext.getStepName()).thenReturn("testStep");
 
         sut = new NablarchListenerExecutor<String>("testListeners", jobContext);
         listenerList.clear();
@@ -93,7 +87,7 @@ public class NablarchListenerExecutorTest {
         assertThat(listenerList.get(1), is("before:testListener2"));
 
         // スタックに積まれていること
-        LinkedList<String> stack = Deencapsulation.getField(sut, "executedListenerStack");
+        LinkedList<String> stack = ReflectionUtil.getFieldValue(sut, "executedListenerStack");
         assertThat(stack.size(), is(2));
         assertThat(stack.pop(), is("testListener2"));
         assertThat(stack.pop(), is("testListener1"));
@@ -136,7 +130,7 @@ public class NablarchListenerExecutorTest {
         assertThat(listenerList.get(1), is("before:testListener4"));
 
         // スタックに積まれていること
-        LinkedList<String> stack = Deencapsulation.getField(sut, "executedListenerStack");
+        LinkedList<String> stack = ReflectionUtil.getFieldValue(sut, "executedListenerStack");
         assertThat(stack.size(), is(2));
         assertThat(stack.pop(), is("testListener4"));
         assertThat(stack.pop(), is("testListener3"));
@@ -159,7 +153,7 @@ public class NablarchListenerExecutorTest {
         assertThat(listenerList.size(), is(0));
 
         // スタックに積まれていないこと
-        LinkedList<String> stack = Deencapsulation.getField(sut, "executedListenerStack");
+        LinkedList<String> stack = ReflectionUtil.getFieldValue(sut, "executedListenerStack");
         assertThat(stack.size(), is(0));
     }
 
@@ -204,7 +198,7 @@ public class NablarchListenerExecutorTest {
         assertThat(listenerList.get(1), is("before:exceptionListener"));
 
         // 実行されたリスナーのみスタックに積まれていること
-        LinkedList<String> stack = Deencapsulation.getField(sut, "executedListenerStack");
+        LinkedList<String> stack = ReflectionUtil.getFieldValue(sut, "executedListenerStack");
         assertThat(stack.size(), is(2));
         assertThat(stack.pop(), is("exceptionListener"));
         assertThat(stack.pop(), is("testListener1"));
@@ -253,7 +247,7 @@ public class NablarchListenerExecutorTest {
         assertThat(listenerList.get(2), is("before:errorListener"));
 
         // 実行されたリスナーのみスタックに積まれていること
-        LinkedList<String> stack = Deencapsulation.getField(sut, "executedListenerStack");
+        LinkedList<String> stack = ReflectionUtil.getFieldValue(sut, "executedListenerStack");
         assertThat(stack.size(), is(3));
         assertThat(stack.pop(), is("errorListener"));
         assertThat(stack.pop(), is("testListener2"));
@@ -267,7 +261,7 @@ public class NablarchListenerExecutorTest {
     @Test
     public void testExecuteAfter_basic() throws Exception {
 
-        LinkedList<String> stack = Deencapsulation.getField(sut, "executedListenerStack");
+        LinkedList<String> stack = ReflectionUtil.getFieldValue(sut, "executedListenerStack");
         stack.push("testListener1");
         stack.push("testListener2");
         stack.push("testListener3");
@@ -311,7 +305,7 @@ public class NablarchListenerExecutorTest {
     @Test
     public void testExecuteAfter_exception() throws Exception {
 
-        LinkedList<String> stack = Deencapsulation.getField(sut, "executedListenerStack");
+        LinkedList<String> stack = ReflectionUtil.getFieldValue(sut, "executedListenerStack");
         stack.push("testListener1");
         stack.push("exceptionListener");
         stack.push("testListener3");
@@ -349,7 +343,7 @@ public class NablarchListenerExecutorTest {
     @Test
     public void testExecuteAfter_error() throws Exception {
 
-        LinkedList<String> stack = Deencapsulation.getField(sut, "executedListenerStack");
+        LinkedList<String> stack = ReflectionUtil.getFieldValue(sut, "executedListenerStack");
         stack.push("testListener1");
         stack.push("errorListener");
         stack.push("testListener3");
@@ -387,7 +381,7 @@ public class NablarchListenerExecutorTest {
     @Test
     public void testExecuteAfter_multiError() throws Exception {
 
-        LinkedList<String> stack = Deencapsulation.getField(sut, "executedListenerStack");
+        LinkedList<String> stack = ReflectionUtil.getFieldValue(sut, "executedListenerStack");
         stack.push("testListener1");
         stack.push("exceptionListener");
         stack.push("testListener3");
@@ -434,7 +428,7 @@ public class NablarchListenerExecutorTest {
 
         sut = new NablarchListenerExecutor<String>("testListeners", jobContext, stepContext);
 
-        LinkedList<String> stack = Deencapsulation.getField(sut, "executedListenerStack");
+        LinkedList<String> stack = ReflectionUtil.getFieldValue(sut, "executedListenerStack");
         stack.push("testListener1");
         stack.push("exceptionListener");
         stack.push("testListener3");
@@ -474,7 +468,7 @@ public class NablarchListenerExecutorTest {
 
         sut = new NablarchListenerExecutor<String>("testListeners", jobContext, stepContext);
 
-        LinkedList<String> stack = Deencapsulation.getField(sut, "executedListenerStack");
+        LinkedList<String> stack = ReflectionUtil.getFieldValue(sut, "executedListenerStack");
         stack.push("testListener1");
         stack.push("testListener2");
         stack.push("testListener3");
@@ -522,7 +516,7 @@ public class NablarchListenerExecutorTest {
 
         sut = new NablarchListenerExecutor<String>("testListeners", jobContext, stepContext);
 
-        LinkedList<String> stack = Deencapsulation.getField(sut, "executedListenerStack");
+        LinkedList<String> stack = ReflectionUtil.getFieldValue(sut, "executedListenerStack");
         stack.push("testListener1");
         stack.push("exceptionListener");
         stack.push("testListener3");
@@ -563,7 +557,7 @@ public class NablarchListenerExecutorTest {
 
         sut = new NablarchListenerExecutor<String>("testListeners", jobContext, stepContext);
 
-        LinkedList<String> stack = Deencapsulation.getField(sut, "executedListenerStack");
+        LinkedList<String> stack = ReflectionUtil.getFieldValue(sut, "executedListenerStack");
         stack.push("testListener1");
         stack.push("testListener2");
         stack.push("errorListener");
@@ -604,7 +598,7 @@ public class NablarchListenerExecutorTest {
 
         sut = new NablarchListenerExecutor<String>("testListeners", jobContext, stepContext);
 
-        LinkedList<String> stack = Deencapsulation.getField(sut, "executedListenerStack");
+        LinkedList<String> stack = ReflectionUtil.getFieldValue(sut, "executedListenerStack");
         stack.push("testListener1");
         stack.push("errorListener");
         stack.push("testListener3");
@@ -687,7 +681,7 @@ public class NablarchListenerExecutorTest {
         assertThat(listenerList.get(1), is("before:testStep2"));
 
         // スタックに積まれていること
-        LinkedList<String> stack = Deencapsulation.getField(sut, "executedListenerStack");
+        LinkedList<String> stack = ReflectionUtil.getFieldValue(sut, "executedListenerStack");
         assertThat(stack.size(), is(2));
         assertThat(stack.pop(), is("testStep2"));
         assertThat(stack.pop(), is("testStep1"));

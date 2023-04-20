@@ -1,64 +1,53 @@
 package nablarch.fw.batch.ee.listener.chunk;
 
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+import jakarta.batch.runtime.context.JobContext;
+import jakarta.batch.runtime.context.StepContext;
+import nablarch.core.repository.ObjectLoader;
+import nablarch.core.repository.SystemRepository;
+import nablarch.fw.batch.ee.listener.NablarchListenerContext;
+import nablarch.test.support.reflection.ReflectionUtil;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.InOrder;
+import org.mockito.Mockito;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.batch.runtime.context.JobContext;
-import jakarta.batch.runtime.context.StepContext;
-
-import nablarch.core.repository.ObjectLoader;
-import nablarch.core.repository.SystemRepository;
-import nablarch.fw.batch.ee.listener.NablarchListenerContext;
-
-import org.junit.Before;
-import org.junit.Test;
-
-import mockit.Deencapsulation;
-import mockit.Mocked;
-import mockit.Expectations;
-import mockit.VerificationsInOrder;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * {@link NablarchItemWriteListenerExecutor}のテスト。
  */
 public class NablarchItemWriteListenerExecutorTest {
 
-    @Mocked
-    StepContext mockStepContext;
+    StepContext mockStepContext = mock(StepContext.class);
 
-    @Mocked
-    JobContext mockJobContext;
+    JobContext mockJobContext = mock(JobContext.class);
 
-    @Mocked
-    NablarchItemWriteListener mockListener1;
+    NablarchItemWriteListener mockListener1 = mock(NablarchItemWriteListener.class);
 
-    @Mocked
-    NablarchItemWriteListener mockListener2;
+    NablarchItemWriteListener mockListener2 = mock(NablarchItemWriteListener.class);
 
     /** テスト対象 */
     NablarchItemWriteListenerExecutor sut = new NablarchItemWriteListenerExecutor();
 
     @Before
     public void setUp() throws Exception {
-        new Expectations() {{
-            mockJobContext.getJobName();
-            result = "testJob";
-            maxTimes = 1;
-            minTimes = 0;
-            mockStepContext.getStepName();
-            result = "testStep";
-            maxTimes = 1;
-            minTimes = 0;
-        }};
+        when(mockJobContext.getJobName()).thenReturn("testJob");
+        when(mockStepContext.getStepName()).thenReturn("testStep");
 
-        Deencapsulation.setField(sut, "jobContext", mockJobContext);
-        Deencapsulation.setField(sut, "stepContext", mockStepContext);
+        ReflectionUtil.setFieldValue(sut, "jobContext", mockJobContext);
+        ReflectionUtil.setFieldValue(sut, "stepContext", mockStepContext);
     }
 
     /**
@@ -86,23 +75,14 @@ public class NablarchItemWriteListenerExecutorTest {
         sut.beforeWrite(items);
         sut.afterWrite(items);
 
-        new VerificationsInOrder() {{
-            // 設定順に実行されていること
-            mockListener1.beforeWrite(new NablarchListenerContext(
-                    withAny(mockJobContext), withAny(mockStepContext)), items);
-            times = 1;
-            mockListener2.beforeWrite(new NablarchListenerContext(
-                    withAny(mockJobContext), withAny(mockStepContext)), items);
-            times = 1;
+        final InOrder inOrder = Mockito.inOrder(mockListener1, mockListener2);
+        // 設定順に実行されていること
+        inOrder.verify(mockListener1).beforeWrite(any(NablarchListenerContext.class), eq(items));
+        inOrder.verify(mockListener2).beforeWrite(any(NablarchListenerContext.class), eq(items));
 
-            // beforeの実行順とは逆順に実行されていること
-            mockListener2.afterWrite(new NablarchListenerContext(
-                    withAny(mockJobContext), withAny(mockStepContext)), items);
-            times = 1;
-            mockListener1.afterWrite(new NablarchListenerContext(
-                    withAny(mockJobContext), withAny(mockStepContext)), items);
-            times = 1;
-        }};
+        // beforeの実行順とは逆順に実行されていること
+        inOrder.verify(mockListener2).afterWrite(any(NablarchListenerContext.class), eq(items));
+        inOrder.verify(mockListener1).afterWrite(any(NablarchListenerContext.class), eq(items));
     }
 
     /**
@@ -131,23 +111,14 @@ public class NablarchItemWriteListenerExecutorTest {
         sut.beforeWrite(items);
         sut.onWriteError(items, ex);
 
-        new VerificationsInOrder() {{
-            // 設定順に実行されていること
-            mockListener1.beforeWrite(new NablarchListenerContext(
-                    withAny(mockJobContext), withAny(mockStepContext)), items);
-            times = 1;
-            mockListener2.beforeWrite(new NablarchListenerContext(
-                    withAny(mockJobContext), withAny(mockStepContext)), items);
-            times = 1;
+        final InOrder inOrder = inOrder(mockListener1, mockListener2);
+        // 設定順に実行されていること
+        inOrder.verify(mockListener1).beforeWrite(any(NablarchListenerContext.class), eq(items));
+        inOrder.verify(mockListener2).beforeWrite(any(NablarchListenerContext.class), eq(items));
 
-            // beforeの実行順とは逆順に実行されていること
-            mockListener2.onWriteError(new NablarchListenerContext(
-                    withAny(mockJobContext), withAny(mockStepContext)), items, ex);
-            times = 1;
-            mockListener1.onWriteError(new NablarchListenerContext(
-                    withAny(mockJobContext), withAny(mockStepContext)), items, ex);
-            times = 1;
-        }};
+        // beforeの実行順とは逆順に実行されていること
+        inOrder.verify(mockListener2).onWriteError(any(NablarchListenerContext.class), eq(items), eq(ex));
+        inOrder.verify(mockListener1).onWriteError(any(NablarchListenerContext.class), eq(items), eq(ex));
     }
 
     /**

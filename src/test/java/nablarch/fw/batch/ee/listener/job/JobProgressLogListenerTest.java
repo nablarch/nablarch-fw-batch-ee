@@ -1,19 +1,18 @@
 package nablarch.fw.batch.ee.listener.job;
 
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.startsWith;
-import static org.junit.Assert.assertThat;
-
 import jakarta.batch.runtime.context.JobContext;
-
-import mockit.Expectations;
-import mockit.Mocked;
 import nablarch.fw.batch.ee.initializer.LogInitializer;
 import nablarch.fw.batch.ee.integration.InMemoryAppender;
 import nablarch.fw.batch.ee.listener.NablarchListenerContext;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.startsWith;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * {@link JobProgressLogListener}のテスト。
@@ -23,8 +22,7 @@ public class JobProgressLogListenerTest {
     /** テスト対象 */
     private JobProgressLogListener sut = new JobProgressLogListener();
 
-    @Mocked
-    JobContext mockJobContext;
+    JobContext mockJobContext = mock(JobContext.class);
 
     @Before
     public void setUp() throws Exception {
@@ -41,12 +39,7 @@ public class JobProgressLogListenerTest {
      */
     @Test
     public void testBeforeJob() throws Exception {
-        new Expectations() {
-            {
-                mockJobContext.getJobName();
-                result = "jobName";
-            }
-        };
+        when(mockJobContext.getJobName()).thenReturn("jobName");
 
         sut.beforeJob(new NablarchListenerContext(mockJobContext, null));
 
@@ -59,12 +52,7 @@ public class JobProgressLogListenerTest {
      */
     @Test
     public void testAfterJob() throws Exception {
-        new Expectations() {
-            {
-                mockJobContext.getJobName();
-                result = "jobName";
-            }
-        };
+        when(mockJobContext.getJobName()).thenReturn("jobName");
 
         sut.afterJob(new NablarchListenerContext(mockJobContext, null));
 

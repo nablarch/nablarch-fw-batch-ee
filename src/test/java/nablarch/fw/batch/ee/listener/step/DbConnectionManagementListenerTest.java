@@ -2,18 +2,16 @@ package nablarch.fw.batch.ee.listener.step;
 
 import jakarta.batch.runtime.context.JobContext;
 import jakarta.batch.runtime.context.StepContext;
-
 import nablarch.common.handler.DbConnectionManagementHandler;
 import nablarch.core.db.connection.DbConnectionContext;
 import nablarch.core.transaction.TransactionContext;
-
 import nablarch.fw.batch.ee.listener.NablarchListenerContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import mockit.Mocked;
-import mockit.Verifications;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 /**
  * {@link DbConnectionManagementListener}のテストクラス。
@@ -26,14 +24,11 @@ public class DbConnectionManagementListenerTest {
     private DbConnectionManagementListener sut = new DbConnectionManagementListener();
 
     // ---------------------------------------- Mock Objects
-    @Mocked
-    DbConnectionManagementHandler mockDbConnectionManagementHandler;
+    DbConnectionManagementHandler mockDbConnectionManagementHandler = mock(DbConnectionManagementHandler.class);
 
-    @Mocked
-    JobContext jobContext;
+    JobContext jobContext = mock(JobContext.class);
 
-    @Mocked
-    StepContext stepContext;
+    StepContext stepContext = mock(StepContext.class);
 
     @Before
     public void setUp() throws Exception {
@@ -54,10 +49,7 @@ public class DbConnectionManagementListenerTest {
     public void testBefore() throws Exception {
         sut.beforeStep(new NablarchListenerContext(jobContext, stepContext));
 
-        new Verifications() {{
-            mockDbConnectionManagementHandler.before();
-            times = 1;
-        }};
+        verify(mockDbConnectionManagementHandler).before();
     }
 
     /**
@@ -69,10 +61,7 @@ public class DbConnectionManagementListenerTest {
     public void testAfter() throws Exception {
         sut.afterStep(new NablarchListenerContext(jobContext, stepContext));
 
-        new Verifications() {{
-            mockDbConnectionManagementHandler.after();
-            times = 1;
-        }};
+        verify(mockDbConnectionManagementHandler).after();
     }
 }
 
