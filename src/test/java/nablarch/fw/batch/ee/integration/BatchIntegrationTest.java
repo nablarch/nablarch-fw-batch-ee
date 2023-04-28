@@ -5,7 +5,6 @@ import jakarta.batch.runtime.JobExecution;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.Response;
-import mockit.Deencapsulation;
 import nablarch.core.repository.ObjectLoader;
 import nablarch.core.repository.SystemRepository;
 import nablarch.core.repository.di.DiContainer;
@@ -17,6 +16,7 @@ import nablarch.fw.batch.ee.integration.app.FileWriter;
 import nablarch.fw.batch.ee.integration.app.RegisterBatchOutputTable;
 import nablarch.fw.batch.ee.integration.app.ThrowErrorWriter;
 import nablarch.test.support.db.helper.VariousDbTestHelper;
+import nablarch.test.support.reflection.ReflectionUtil;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.container.test.api.RunAsClient;
 import org.jboss.arquillian.junit.Arquillian;
@@ -225,7 +225,7 @@ public class BatchIntegrationTest {
     public void setUp() throws Exception {
         setUpClass();
 
-        Deencapsulation.setField(RepositoryInitializer.class, "isInitialized", false);
+        ReflectionUtil.setFieldValue(RepositoryInitializer.class, "isInitialized", false);
         RegisterBatchOutputTable.processExecuteFlag = false;
         ThrowErrorWriter.skipIds = new int[0];
         ThrowErrorWriter.errorId = -1;
@@ -251,7 +251,7 @@ public class BatchIntegrationTest {
 
     @After
     public void tearDown() throws Exception {
-        Deencapsulation.setField(RepositoryInitializer.class, "isInitialized", false);
+        ReflectionUtil.setFieldValue(RepositoryInitializer.class, "isInitialized", false);
     }
 
     /**

@@ -1,22 +1,22 @@
 package nablarch.fw.batch.ee.listener.job;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-
 import jakarta.batch.operations.BatchRuntimeException;
 import jakarta.batch.runtime.context.JobContext;
-
 import nablarch.fw.batch.ee.listener.NablarchListenerContext;
 import nablarch.fw.handler.AlreadyProcessRunningException;
 import nablarch.fw.handler.DuplicateProcessChecker;
-
 import org.junit.Before;
 import org.junit.Test;
 
-import mockit.Expectations;
-import mockit.Mocked;
-import mockit.Verifications;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * {@link DuplicateJobRunningCheckListener}のテスト。
@@ -26,11 +26,9 @@ public class DuplicateJobRunningCheckListenerTest {
     /** テスト対象 */
     private DuplicateJobRunningCheckListener sut = new DuplicateJobRunningCheckListener();
 
-    @Mocked
-    JobContext mockJobContext;
+    JobContext mockJobContext = mock(JobContext.class);
 
-    @Mocked
-    DuplicateProcessChecker mockDuplicateProcessChecker;
+    DuplicateProcessChecker mockDuplicateProcessChecker = mock(DuplicateProcessChecker.class);
 
     @Before
     public void setUp() throws Exception {
@@ -42,19 +40,14 @@ public class DuplicateJobRunningCheckListenerTest {
      */
     @Test
     public void testBeforeAndAfter() throws Exception {
-        new Expectations() {{
-            mockJobContext.getJobName();
-            result = "jobName";
-        }};
+        when(mockJobContext.getJobName()).thenReturn("jobName");
 
         sut.beforeJob(new NablarchListenerContext(mockJobContext, null));
         sut.afterJob(new NablarchListenerContext(mockJobContext, null));
 
         // プロセスアクティブ化（チェック処理含む）が呼び出されること
-        new Verifications() {{
-            mockDuplicateProcessChecker.checkAndActive("jobName");
-            mockDuplicateProcessChecker.inactive("jobName");
-        }};
+        verify(mockDuplicateProcessChecker, atLeastOnce()).checkAndActive("jobName");
+        verify(mockDuplicateProcessChecker, atLeastOnce()).inactive("jobName");
     }
 
     /**
@@ -62,18 +55,12 @@ public class DuplicateJobRunningCheckListenerTest {
      */
     @Test
     public void testAlreadyRunning() throws Exception {
-        new Expectations() {{
-            mockJobContext.getJobName();
-            result = "jobName";
+        when(mockJobContext.getJobName()).thenReturn("jobName");
 
-            mockDuplicateProcessChecker.checkAndActive("jobName");
-            result = new AlreadyProcessRunningException("already running.");
+        doThrow(new AlreadyProcessRunningException("already running.")).when(mockDuplicateProcessChecker).checkAndActive("jobName");
 
-            mockJobContext.setExitStatus("JobAlreadyRunning");
 
-            mockJobContext.getExitStatus();
-            result = "JobAlreadyRunning";
-        }};
+        when(mockJobContext.getExitStatus()).thenReturn("JobAlreadyRunning");
 
         try {
             sut.beforeJob(new NablarchListenerContext(mockJobContext, null));
@@ -84,11 +71,9 @@ public class DuplicateJobRunningCheckListenerTest {
 
         sut.afterJob(new NablarchListenerContext(mockJobContext, null));
 
-        new Verifications() {{
-            // 多重起動なので、非活性化処理は呼び出されないこと
-            mockDuplicateProcessChecker.inactive("jobName");
-            times = 0;
-        }};
+        verify(mockJobContext).setExitStatus("JobAlreadyRunning");
+        // 多重起動なので、非活性化処理は呼び出されないこと
+        verify(mockDuplicateProcessChecker, never()).inactive("jobName");
     }
 }
 

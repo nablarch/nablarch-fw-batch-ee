@@ -1,16 +1,10 @@
 package nablarch.fw.batch.ee.listener.chunk;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-
 import jakarta.batch.operations.BatchRuntimeException;
 import jakarta.batch.runtime.context.JobContext;
 import jakarta.batch.runtime.context.StepContext;
-
 import nablarch.core.transaction.Transaction;
 import nablarch.core.transaction.TransactionContext;
-
 import nablarch.fw.batch.ee.listener.NablarchListenerContext;
 import org.junit.After;
 import org.junit.Before;
@@ -19,8 +13,13 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import mockit.Mocked;
-import mockit.Verifications;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 /**
  * {@link ItemWriteTransactionManagementListener}のテストクラス。
@@ -37,14 +36,11 @@ public class ItemWriteTransactionManagementListenerTest {
     String transactionName;
     
     // ------------------------------ Mock Objects
-    @Mocked
-    Transaction mockTransaction;
+    Transaction mockTransaction = mock(Transaction.class);
 
-    @Mocked
-    JobContext mockJobContext;
+    JobContext mockJobContext = mock(JobContext.class);
 
-    @Mocked
-    StepContext mockStepContext;
+    StepContext mockStepContext = mock(StepContext.class);
 
     @Parameters
     public static Collection<String[][]> parameters() {
@@ -79,12 +75,8 @@ public class ItemWriteTransactionManagementListenerTest {
     public void testCommit() throws Exception {
         sut.afterWrite(new NablarchListenerContext(mockJobContext, mockStepContext), Collections.emptyList());
 
-        new Verifications() {{
-            mockTransaction.commit();
-            times = 1;
-            mockTransaction.rollback();
-            times = 0;
-        }};
+        verify(mockTransaction).commit();
+        verify(mockTransaction, never()).rollback();
     }
 
     /**
@@ -95,11 +87,7 @@ public class ItemWriteTransactionManagementListenerTest {
         sut.onWriteError(new NablarchListenerContext(mockJobContext, mockStepContext), Collections.emptyList(),
                 new BatchRuntimeException());
 
-        new Verifications() {{
-            mockTransaction.rollback();
-            times = 1;
-            mockTransaction.commit();
-            times = 0;
-        }};
+        verify(mockTransaction).rollback();
+        verify(mockTransaction, never()).commit();
     }
 }

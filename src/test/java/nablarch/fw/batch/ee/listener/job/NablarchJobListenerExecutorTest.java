@@ -1,8 +1,16 @@
 package nablarch.fw.batch.ee.listener.job;
 
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+import jakarta.batch.runtime.context.JobContext;
+import nablarch.core.repository.ObjectLoader;
+import nablarch.core.repository.SystemRepository;
+import nablarch.fw.batch.ee.initializer.LogInitializer;
+import nablarch.fw.batch.ee.initializer.RepositoryInitializer;
+import nablarch.fw.batch.ee.listener.NablarchListenerContext;
+import nablarch.test.support.reflection.ReflectionUtil;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.InOrder;
+import org.mockito.MockedStatic;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,43 +18,29 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.batch.runtime.context.JobContext;
-
-import mockit.Expectations;
-import nablarch.core.repository.ObjectLoader;
-import nablarch.core.repository.SystemRepository;
-import nablarch.fw.batch.ee.initializer.LogInitializer;
-import nablarch.fw.batch.ee.initializer.RepositoryInitializer;
-import nablarch.fw.batch.ee.listener.NablarchListenerContext;
-
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-
-import mockit.Deencapsulation;
-import mockit.Mocked;
-import mockit.VerificationsInOrder;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.when;
 
 /**
  * {@link NablarchJobListenerExecutor}のテスト。
  */
-@Ignore("jacoco と jmockit が競合してエラーになるため")
 public class NablarchJobListenerExecutorTest {
 
-    @Mocked
-    JobContext mockJobContext;
+    JobContext mockJobContext = mock(JobContext.class);
 
-    @Mocked
-    NablarchJobListener mockListener1;
+    NablarchJobListener mockListener1 = mock(NablarchJobListener.class);
 
-    @Mocked
-    NablarchJobListener mockListener2;
+    NablarchJobListener mockListener2 = mock(NablarchJobListener.class);
 
-    @Mocked
-    LogInitializer mockLogInitializer;
+    LogInitializer mockLogInitializer = mock(LogInitializer.class);
 
-    @Mocked
-    RepositoryInitializer mockRepositoryInitializer;
+    RepositoryInitializer mockRepositoryInitializer = mock(RepositoryInitializer.class);
 
     /** テスト対象 */
     NablarchJobListenerExecutor sut = new NablarchJobListenerExecutor();
@@ -54,14 +48,9 @@ public class NablarchJobListenerExecutorTest {
 
     @Before
     public void setUp() throws Exception {
-        new Expectations() {{
-            mockJobContext.getJobName();
-            maxTimes = 1;
-            minTimes = 0;
-            result = "testJob";
-        }};
+        when(mockJobContext.getJobName()).thenReturn("testJob");
 
-        Deencapsulation.setField(sut, "jobContext", mockJobContext);
+        ReflectionUtil.setFieldValue(sut, "jobContext", mockJobContext);
     }
 
     /**
@@ -84,27 +73,26 @@ public class NablarchJobListenerExecutorTest {
             }
         });
 
-        sut.beforeJob();
-        sut.afterJob();
+        try (
+            final MockedStatic<LogInitializer> logInitializer = mockStatic(LogInitializer.class);
+            final MockedStatic<RepositoryInitializer> repositoryInitializer = mockStatic(RepositoryInitializer.class);
+        ) {
+            sut.beforeJob();
+            sut.afterJob();
+            
+            logInitializer.verify(LogInitializer::initialize);
+            repositoryInitializer.verify(() -> RepositoryInitializer.initialize("batch-boot.xml"));
 
-        new VerificationsInOrder() {{
-            LogInitializer.initialize();
-            times = 1;
-            RepositoryInitializer.initialize("batch-boot.xml");
-            times = 1;
+            final InOrder inOrder = inOrder(mockListener1, mockListener2);
 
             // 設定順に実行されていること
-            mockListener1.beforeJob(new NablarchListenerContext(withAny(mockJobContext), null));
-            times = 1;
-            mockListener2.beforeJob(new NablarchListenerContext(withAny(mockJobContext), null));
-            times = 1;
+            inOrder.verify(mockListener1).beforeJob(any(NablarchListenerContext.class));
+            inOrder.verify(mockListener2).beforeJob(any(NablarchListenerContext.class));
 
             // beforeの実行順とは逆順に実行されていること
-            mockListener2.afterJob(new NablarchListenerContext(withAny(mockJobContext), null));
-            times = 1;
-            mockListener1.afterJob(new NablarchListenerContext(withAny(mockJobContext), null));
-            times = 1;
-        }};
+            inOrder.verify(mockListener2).afterJob(any(NablarchListenerContext.class));
+            inOrder.verify(mockListener1).afterJob(any(NablarchListenerContext.class));
+        }
     }
 
     /**

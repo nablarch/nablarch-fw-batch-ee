@@ -1,33 +1,34 @@
 package nablarch.fw.batch.ee.listener.step;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-
-import java.util.Arrays;
-import java.util.Collection;
-
 import jakarta.batch.runtime.BatchStatus;
 import jakarta.batch.runtime.context.JobContext;
 import jakarta.batch.runtime.context.StepContext;
-
 import nablarch.core.repository.SystemRepository;
 import nablarch.core.transaction.Transaction;
 import nablarch.core.transaction.TransactionContext;
 import nablarch.core.transaction.TransactionFactory;
 import nablarch.fw.batch.ee.listener.NablarchListenerContext;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.mockito.MockedStatic;
 
-import mockit.Expectations;
-import mockit.Mocked;
-import mockit.Verifications;
+import java.util.Arrays;
+import java.util.Collection;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.sameInstance;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * {@link StepTransactionManagementListener}のテストクラス
@@ -39,17 +40,13 @@ public class StepTransactionManagementListenerTest {
     private final StepTransactionManagementListener sut = new StepTransactionManagementListener();
 
     // ------------------------------ mock object
-    @Mocked
-    private JobContext mockJobContext;
+    private final JobContext mockJobContext = mock(JobContext.class);
 
-    @Mocked
-    private StepContext mockStepContext;
+    private final StepContext mockStepContext = mock(StepContext.class);
 
-    @Mocked
-    private TransactionFactory mockTransactionFactory;
+    private final TransactionFactory mockTransactionFactory = mock(TransactionFactory.class);
 
-    @Mocked
-    private Transaction mockTransaction;
+    private final Transaction mockTransaction = mock(Transaction.class);
 
     @Parameters
     public static Collection<String[][]> parameters() {
@@ -90,18 +87,12 @@ public class StepTransactionManagementListenerTest {
      */
     @Test
     public void testBefore() throws Exception {
-        new Expectations() {{
-            mockTransactionFactory.getTransaction(transactionName);
-            result = mockTransaction;
-        }};
+        when(mockTransactionFactory.getTransaction(transactionName)).thenReturn(mockTransaction);
 
         sut.beforeStep(new NablarchListenerContext(mockJobContext, mockStepContext));
 
         // トランザクションの開始処理が呼び出されていることを検証
-        new Verifications() {{
-            mockTransaction.begin();
-            times = 1;
-        }};
+        verify(mockTransaction).begin();
 
         assertThat("Contextにトランザクションが設定されていること",
                 TransactionContext.getTransaction(transactionName), is(sameInstance(mockTransaction)));
@@ -114,19 +105,13 @@ public class StepTransactionManagementListenerTest {
      */
     @Test
     public void testAfterNormalEnd() throws Exception {
-        new Expectations() {{
-            mockTransactionFactory.getTransaction(transactionName);
-            result = mockTransaction;
-        }};
+        when(mockTransactionFactory.getTransaction(transactionName)).thenReturn(mockTransaction);
 
         sut.beforeStep(new NablarchListenerContext(mockJobContext, mockStepContext));
         sut.afterStep(new NablarchListenerContext(mockJobContext, mockStepContext));
 
         // トランザクションの確定処理(commit)が呼び出されていることを検証
-        new Verifications() {{
-            mockTransaction.commit();
-            times = 1;
-        }};
+        verify(mockTransaction).commit();
 
         // トランザクションコンテキストから削除されていることを検証する。
         try {
@@ -144,24 +129,18 @@ public class StepTransactionManagementListenerTest {
      */
     @Test
     public void testAfterStepException() throws Exception {
-        new Expectations() {{
-            mockTransactionFactory.getTransaction(transactionName);
-            result = mockTransaction;
+        when(mockTransactionFactory.getTransaction(transactionName)).thenReturn(mockTransaction);
 
-            mockStepContext.getException();
-            returns(new RuntimeException("step error."), null);
-        }};
+        when(mockStepContext.getException())
+                .thenReturn(new RuntimeException("step error."))
+                .thenReturn(null);
 
         sut.beforeStep(new NablarchListenerContext(mockJobContext, mockStepContext));
         sut.afterStep(new NablarchListenerContext(mockJobContext, mockStepContext));
 
         // トランザクションの破棄処理(rollback)が呼び出されていることを検証する。
-        new Verifications() {{
-            mockTransaction.begin();
-            times = 1;
-            mockTransaction.rollback();
-            times = 1;
-        }};
+        verify(mockTransaction).begin();
+        verify(mockTransaction).rollback();
 
         assertThat("トランザクションがコンテキストから削除されていること",
                 TransactionContext.containTransaction(transactionName), is(false));
@@ -172,25 +151,16 @@ public class StepTransactionManagementListenerTest {
      */
     @Test
     public void testAfterStepJobFailed() throws Exception {
-        new Expectations() {{
-            mockTransactionFactory.getTransaction(transactionName);
-            result = mockTransaction;
-
-            mockJobContext.getBatchStatus();
-            result = BatchStatus.FAILED;
-        }};
+        when(mockTransactionFactory.getTransaction(transactionName)).thenReturn(mockTransaction);
+        when(mockJobContext.getBatchStatus()).thenReturn(BatchStatus.FAILED);
 
         sut.beforeStep(new NablarchListenerContext(mockJobContext, mockStepContext));
         sut.afterStep(new NablarchListenerContext(mockJobContext, mockStepContext));
 
-        new Verifications() {{
-            mockTransaction.begin();
-            times = 1;
-            mockTransaction.rollback();
-            times = 1;
-            mockTransaction.commit();
-            times = 0;
-        }};
+        verify(mockTransaction).begin();
+        verify(mockTransaction).rollback();
+        verify(mockTransaction, never()).commit();
+        
         assertThat("トランザクションがコンテキストから削除されていること",
                 TransactionContext.containTransaction(transactionName), is(false));
     }
@@ -202,25 +172,15 @@ public class StepTransactionManagementListenerTest {
      */
     @Test
     public void testAfterStepStepFailed() throws Exception {
-        new Expectations() {{
-            mockTransactionFactory.getTransaction(transactionName);
-            result = mockTransaction;
-
-            mockStepContext.getBatchStatus();
-            result = BatchStatus.FAILED;
-        }};
+        when(mockTransactionFactory.getTransaction(transactionName)).thenReturn(mockTransaction);
+        when(mockStepContext.getBatchStatus()).thenReturn(BatchStatus.FAILED);
 
         sut.beforeStep(new NablarchListenerContext(mockJobContext, mockStepContext));
         sut.afterStep(new NablarchListenerContext(mockJobContext, mockStepContext));
 
-        new Verifications() {{
-            mockTransaction.begin();
-            times = 1;
-            mockTransaction.rollback();
-            times = 1;
-            mockTransaction.commit();
-            times = 0;
-        }};
+        verify(mockTransaction).begin();
+        verify(mockTransaction).rollback();
+        verify(mockTransaction, never()).commit();
 
         assertThat("トランザクションがコンテキストから削除されていること",
                 TransactionContext.containTransaction(transactionName), is(false));
@@ -232,27 +192,22 @@ public class StepTransactionManagementListenerTest {
      * {@link StepTransactionManagementListener#afterStep(NablarchListenerContext)}処理では予期せぬ例外が発生しないこと。
      */
     @Test
-    public void testGetTransactionFailed(@Mocked TransactionContext mockContext) throws Exception {
-        new Expectations() {{
-            mockTransactionFactory.getTransaction(transactionName);
-            result = new IllegalArgumentException("invalid transaction name.");
-        }};
-    
-        try {
-            sut.beforeStep(new NablarchListenerContext(mockJobContext, mockStepContext));
-            fail("例外が発生するのでここはとおらない");
-        } catch (IllegalArgumentException e) {
-            assertThat(e.getMessage(), is("invalid transaction name."));
-    
+    public void testGetTransactionFailed() throws Exception {
+        when(mockTransactionFactory.getTransaction(transactionName)).thenThrow(new IllegalArgumentException("invalid transaction name."));
+        try(final MockedStatic<TransactionContext> mocked = mockStatic(TransactionContext.class)) {
+            try {
+                sut.beforeStep(new NablarchListenerContext(mockJobContext, mockStepContext));
+                fail("例外が発生するのでここはとおらない");
+            } catch (IllegalArgumentException e) {
+                assertThat(e.getMessage(), is("invalid transaction name."));
+
+            }
+
+            sut.afterStep(new NablarchListenerContext(mockJobContext, mockStepContext));
+
+            // トランザクションが開始されていないので、トランザクションの破棄処理は実行されないこと
+            mocked.verify(() -> TransactionContext.removeTransaction(transactionName), never());
         }
-    
-        sut.afterStep(new NablarchListenerContext(mockJobContext, mockStepContext));
-    
-        // トランザクションが開始されていないので、トランザクションの破棄処理は実行されないこと
-        new Verifications() {{
-            TransactionContext.removeTransaction(transactionName);
-            times = 0;
-        }};
     }
 }
 
