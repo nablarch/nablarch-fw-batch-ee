@@ -78,7 +78,10 @@
       </activation>
       <properties>
         <!-- Java 17 で動かすときに MaxPermSize の指定があるとエラーになるので、設定を上書きして除去 -->
-        <junit.additionalArgLine></junit.additionalArgLine>
+        <!-- testで用いられている SecurityManager はJava18からデフォルトで動的にインストールできないようになっており、Java21 で動かすとエラーになるため、明示的に許可する。 -->
+        <!-- 複数プロパティを指定すると順序が保証されないかつ、 Java17に設定しても問題ないためJava17のプロファイルに設定する。　-->
+        <!-- このオプションを付けると今後SecurityManagerを使用している箇所が検知できなくなるので、暫定的な対応とする。 -->
+        <junit.additionalArgLine>-Djava.security.manager=allow</junit.additionalArgLine>
       </properties>
     </profile>
   </profiles>
