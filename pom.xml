@@ -33,6 +33,7 @@
       <properties>
         <!-- testで用いられている SecurityManager はJava18からデフォルトで動的にインストールできないようになっており、Java21 で動かすとエラーになるため、明示的に許可する。 -->
         <junit.additionalArgLine>-Djava.security.manager=allow</junit.additionalArgLine>
+        <arquillian-bom.version>1.8.0.Final</arquillian-bom.version>
       </properties>
     </profile>
   </profiles>
