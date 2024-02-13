@@ -61,6 +61,12 @@
         <scope>import</scope>
         <type>pom</type>
       </dependency>
+      <dependency>
+        <groupId>fish.payara.arquillian</groupId>
+        <artifactId>arquillian-payara-server-embedded</artifactId>
+        <version>3.0.alpha8</version>
+        <scope>test</scope>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
