@@ -22,6 +22,7 @@
 
   <properties>
     <junit.additionalArgLine>--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/sun.net.www.protocol.jar=ALL-UNNAMED --add-opens=java.naming/javax.naming.spi=ALL-UNNAMED</junit.additionalArgLine>
+    <arquillian-bom.version>1.8.0.Final</arquillian-bom.version>
   </properties>
 
   <profiles>
@@ -32,8 +33,7 @@
       </activation>
       <properties>
         <!-- testで用いられている SecurityManager はJava18からデフォルトで動的にインストールできないようになっており、Java21 で動かすとエラーになるため、明示的に許可する。 -->
-        <junit.additionalArgLine>-Djava.security.manager=allow</junit.additionalArgLine>
-        <arquillian-bom.version>1.8.0.Final</arquillian-bom.version>
+        <junit.additionalArgLine>-Djava.security.manager=allow --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/sun.net.www.protocol.jar=ALL-UNNAMED --add-opens=java.naming/javax.naming.spi=ALL-UNNAMED</junit.additionalArgLine>
       </properties>
     </profile>
   </profiles>
@@ -60,12 +60,6 @@
         <version>${payara-bom.version}</version>
         <scope>import</scope>
         <type>pom</type>
-      </dependency>
-      <dependency>
-        <groupId>fish.payara.arquillian</groupId>
-        <artifactId>arquillian-payara-server-embedded</artifactId>
-        <version>3.0.alpha8</version>
-        <scope>test</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>
