@@ -22,7 +22,6 @@
 
   <properties>
     <junit.additionalArgLine>--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/sun.net.www.protocol.jar=ALL-UNNAMED --add-opens=java.naming/javax.naming.spi=ALL-UNNAMED</junit.additionalArgLine>
-    <arquillian-bom.version>1.8.0.Final</arquillian-bom.version>
   </properties>
 
   <profiles>
