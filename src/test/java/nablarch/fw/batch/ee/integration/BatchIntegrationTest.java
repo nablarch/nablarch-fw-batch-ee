@@ -263,7 +263,7 @@ public class BatchIntegrationTest {
 
         // BasicProgressManagerで出力する件数（remaining count）やChunkProgressLogListenerで出力する件数（write count）
         // はStepContext#getMetrics()のREAD_COUNTから算出しているが、Metricsの更新タイミングは実装依存になっている。
-        // 現在テストで使用するPayaraではjBeretと異なりtemWriteListenerの呼び出し後に更新されるため、READ_COUNTが
+        // 現在テストで使用するGlassFishではjBeretと異なりItemWriteListenerの呼び出し後に更新されるため、READ_COUNTが
         // 実際の処理済み件数とは一致しない状態になっているが、ここでは実装に合わせて検証するようにしている。
         // （以降のテストケースでも同様）
         List<String> messages = InMemoryAppender.getLogMessages("PROGRESS");

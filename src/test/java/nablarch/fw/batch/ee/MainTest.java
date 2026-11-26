@@ -6,13 +6,13 @@ import jakarta.batch.runtime.BatchStatus;
 import jakarta.batch.runtime.JobExecution;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import org.junit.rules.ExpectedException;
 import org.mockito.MockedStatic;
 
 import java.util.Properties;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
@@ -22,13 +22,15 @@ import static org.mockito.Mockito.when;
 
 /**
  * バッチアプリケーションのメインクラスのテスト。
+ * <p/>
+ * {@link Main#main(String...)}は終了コードを{@link System#exit(int)}で返すため、
+ * 終了コードの検証はmainメソッドが委譲している{@link JobExecutor#execute()}の戻り値に対して行う。
+ * (SecurityManagerはJava 18以降で非推奨となり、Java 24以降では有効化できないため、
+ * {@link System#exit(int)}を捕捉する方式のテストは行わない。)
  *
  * @author T.Shimoda
  */
 public class MainTest {
-
-    @Rule
-    public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
@@ -76,8 +78,7 @@ public class MainTest {
             when(jobOperator.start(eq("main-test-Job1"), any(Properties.class))).thenReturn(1L);
             when(jobOperator.getJobExecution(1L).getBatchStatus()).thenReturn(BatchStatus.COMPLETED);
 
-            exit.expectSystemExitWithStatus(0);
-            Main.main("main-test-Job1");
+            assertThat(new JobExecutor("main-test-Job1", new Properties()).execute(), is(0));
         }
     }
 
@@ -91,8 +92,7 @@ public class MainTest {
             when(jobOperator.start(eq("main-test-Job2"), any(Properties.class))).thenReturn(2L);
             when(jobOperator.getJobExecution(2L).getBatchStatus()).thenReturn(BatchStatus.FAILED);
 
-            exit.expectSystemExitWithStatus(1);
-            Main.main("main-test-Job2");
+            assertThat(new JobExecutor("main-test-Job2", new Properties()).execute(), is(1));
         }
     }
 
@@ -109,8 +109,7 @@ public class MainTest {
             when(jobExecution.getBatchStatus()).thenReturn(BatchStatus.COMPLETED);
             when(jobExecution.getExitStatus()).thenReturn("WARNING");
 
-            exit.expectSystemExitWithStatus(2);
-            Main.main("main-test-Job3");
+            assertThat(new JobExecutor("main-test-Job3", new Properties()).execute(), is(2));
         }
     }
 
@@ -128,8 +127,7 @@ public class MainTest {
             when(jobExecution.getBatchStatus()).thenReturn(BatchStatus.FAILED);
             when(jobExecution.getExitStatus()).thenReturn("WARNING");
             
-            exit.expectSystemExitWithStatus(2);
-            Main.main("main-test-Job4");
+            assertThat(new JobExecutor("main-test-Job4", new Properties()).execute(), is(2));
         }
     }
 }
